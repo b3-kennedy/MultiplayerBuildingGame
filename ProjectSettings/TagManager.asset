@@ -7,6 +7,7 @@ TagManager:
   - Placed
   - Wall
   - Floor
+  - Tree
   layers:
   - Default
   - TransparentFX

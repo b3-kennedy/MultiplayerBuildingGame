@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
@@ -44,6 +45,7 @@ public class BuildingManager : NetworkBehaviour
     string destroyText = "MODE: DESTROY";
 
     PlayerInterfaceManager playerInterfaceManager;
+    InventoryManager inventoryManager;
 
     int index;
 
@@ -57,6 +59,7 @@ public class BuildingManager : NetworkBehaviour
     {
         mode = Mode.NORMAL;
         playerInterfaceManager = GetComponent<PlayerInterfaceManager>();
+        inventoryManager = GetComponent<InventoryManager>();
         buildObject = floor;
     }
 
@@ -148,7 +151,6 @@ public class BuildingManager : NetworkBehaviour
 
                 if (buildObject == floor)
                 {
-                    Debug.Log("floor");
                     gridPos += hit.normal * (buildObject.transform.localScale.x / 2);
                 }
             }
@@ -197,16 +199,22 @@ public class BuildingManager : NetworkBehaviour
             }
 
             // Place the object when the user clicks
-            if (Input.GetButtonDown("Fire1"))
+            if (Input.GetButtonDown("Fire1") && CheckMaterialRequirement())
             {
                 // Instantiate a placed version of the object
                 BuildOnServerRpc(currentObject.transform.position.x, currentObject.transform.position.y, currentObject.transform.position.z,
                     currentObject.transform.eulerAngles.x, currentObject.transform.eulerAngles.y, currentObject.transform.eulerAngles.z,
                     buildIndex);
+                inventoryManager.woodCount -= currentObject.GetComponent<BuildingObject>().wood;
                 Destroy(currentObject);
 
             }
         }
+    }
+
+    bool CheckMaterialRequirement()
+    {
+        return inventoryManager.woodCount >= currentObject.GetComponent<BuildingObject>().wood;
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -229,13 +237,26 @@ public class BuildingManager : NetworkBehaviour
                 placed.transform.GetChild(i).GetComponent<MeshRenderer>().material = buildObjects[buildI].material;
             }
         }
-        // Update the layer of the placed object to avoid being targeted as a placeholder
         placed.layer = 3;
         placed.GetComponent<NetworkObject>().Spawn();
+        UpdateObjectLayerClientRpc(placed.GetComponent<NetworkObject>().NetworkObjectId);
         NavMeshManager.Instance.BuildNavMesh();
 
         //// Check if the NetworkObject exists in the spawned objects dictionary
 
+    }
+
+    [ClientRpc]
+    void UpdateObjectLayerClientRpc(ulong objectId)
+    {
+        if(NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(objectId, out NetworkObject obj))
+        {
+            obj.gameObject.layer = 3;
+        }
+        else
+        {
+            Debug.Log("Object not found");
+        }
     }
 
     void DestroyMode()
@@ -285,7 +306,21 @@ public class BuildingManager : NetworkBehaviour
 
         if (Input.GetButtonDown("Fire1"))
         {
-            Destroy(hit.collider.gameObject);
+            DestroyOnServerRpc(hit.collider.GetComponent<NetworkObject>().NetworkObjectId);
+            inventoryManager.woodCount += hit.collider.GetComponent<BuildingObject>().wood;
+        }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void DestroyOnServerRpc(ulong objectId)
+    {
+        if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(objectId, out NetworkObject obj))
+        {
+            obj.Despawn();
+        }
+        else
+        {
+            Debug.Log("Object not found");
         }
     }
 

@@ -474,6 +474,7 @@ GameObject:
   - component: {fileID: 551304584962897985}
   - component: {fileID: 7348281681156951375}
   - component: {fileID: 3173883652015396384}
+  - component: {fileID: 4195554465519152269}
   - component: {fileID: 2554349294857064822}
   - component: {fileID: 8662491079250080063}
   - component: {fileID: 1805496975843434594}
@@ -481,6 +482,7 @@ GameObject:
   - component: {fileID: -588467515969454182}
   - component: {fileID: -6374596970067802916}
   - component: {fileID: 6492969280114831433}
+  - component: {fileID: -1079961612692858961}
   m_Layer: 0
   m_Name: First Person Controller
   m_TagString: Untagged
@@ -628,6 +630,19 @@ MonoBehaviour:
     material: {fileID: 2100000, guid: df52f4d0325777d49bbe6e566536e284, type: 2}
   - obj: {fileID: 4641605487821076077, guid: d05401cc53939a142abfa0666dadaf2c, type: 3}
     material: {fileID: 2100000, guid: df52f4d0325777d49bbe6e566536e284, type: 2}
+--- !u!114 &4195554465519152269
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2508129950967823994}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7854481f08b0834285e5c806a2870ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  woodCount: 0
 --- !u!114 &2554349294857064822
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -752,6 +767,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   jumpStrength: 2
   groundCheck: {fileID: -588467515969454182}
+--- !u!114 &-1079961612692858961
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2508129950967823994}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45abad9fe5e19244d9744a8bbae4b088, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  interactRange: 5
 --- !u!1 &3943530510550106544
 GameObject:
   m_ObjectHideFlags: 0

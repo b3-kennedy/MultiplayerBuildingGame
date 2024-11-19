@@ -120,6 +120,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   id: 0
+  wood: 10
   status: 0
   yOffset: 0.1
   xOffset: 0
