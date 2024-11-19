@@ -210,12 +210,6 @@ public class BuildingManager : NetworkBehaviour
     }
 
     [ServerRpc(RequireOwnership = false)]
-    void SpawnPlaceHolderServerRpc()
-    {
-
-    }
-
-    [ServerRpc(RequireOwnership = false)]
     void BuildOnServerRpc(float posX, float posY, float posZ, float rotX, float rotY , float rotZ, int buildI)
     {
         GameObject placed = Instantiate(buildObjects[buildI].obj, new Vector3(posX, posY, posZ), Quaternion.Euler(rotX, rotY, rotZ));
@@ -238,6 +232,7 @@ public class BuildingManager : NetworkBehaviour
         // Update the layer of the placed object to avoid being targeted as a placeholder
         placed.layer = 3;
         placed.GetComponent<NetworkObject>().Spawn();
+        NavMeshManager.Instance.BuildNavMesh();
 
         //// Check if the NetworkObject exists in the spawned objects dictionary
 
