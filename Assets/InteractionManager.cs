@@ -39,7 +39,7 @@ public class InteractionManager : NetworkBehaviour
         if (Input.GetButton("Fire1"))
         {
             treeTimer += Time.deltaTime;
-            if(treeTimer >= 1)
+            if(treeTimer >= 0.5f)
             {
                 tree.GetComponent<Tree>().TakeDamageServerRpc(20, OwnerClientId);
                 treeTimer = 0;

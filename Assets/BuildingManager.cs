@@ -47,6 +47,8 @@ public class BuildingManager : NetworkBehaviour
     PlayerInterfaceManager playerInterfaceManager;
     InventoryManager inventoryManager;
 
+    List<GameObject> recentlyPlaced = new List<GameObject>();
+
     int index;
 
     public BuildObject[] buildObjects;
@@ -74,7 +76,11 @@ public class BuildingManager : NetworkBehaviour
         {
             for(int i = 0; i < obj.childCount; i++)
             {
-                obj.transform.GetChild(i).GetComponent<MeshRenderer>().material = mat;
+                if (obj.transform.GetChild(i).GetComponent<MeshRenderer>())
+                {
+                    obj.transform.GetChild(i).GetComponent<MeshRenderer>().material = mat;
+                }
+                
             }
         }
     }
@@ -198,17 +204,33 @@ public class BuildingManager : NetworkBehaviour
                 );
             }
 
-            // Place the object when the user clicks
-            if (Input.GetButtonDown("Fire1") && CheckMaterialRequirement())
+            if (CheckMaterialRequirement())
             {
-                // Instantiate a placed version of the object
-                BuildOnServerRpc(currentObject.transform.position.x, currentObject.transform.position.y, currentObject.transform.position.z,
-                    currentObject.transform.eulerAngles.x, currentObject.transform.eulerAngles.y, currentObject.transform.eulerAngles.z,
-                    buildIndex);
-                inventoryManager.woodCount -= currentObject.GetComponent<BuildingObject>().wood;
-                Destroy(currentObject);
+                if (Input.GetButtonDown("Fire1"))
+                {
 
+                    if (!IsServer)
+                    {
+                        BuildLocally(buildIndex);
+                    }
+
+                    // Instantiate a placed version of the object
+                    BuildOnServerRpc(currentObject.transform.position.x, currentObject.transform.position.y, currentObject.transform.position.z,
+                        currentObject.transform.eulerAngles.x, currentObject.transform.eulerAngles.y, currentObject.transform.eulerAngles.z,
+                        buildIndex, OwnerClientId);
+
+
+                    inventoryManager.woodCount -= currentObject.GetComponent<BuildingObject>().wood;
+                    Destroy(currentObject);
+
+                }
             }
+            else
+            {
+                ChangeMaterialInChildren(currentObject.transform, destroyMat);
+            }
+            // Place the object when the user clicks
+
         }
     }
 
@@ -217,8 +239,52 @@ public class BuildingManager : NetworkBehaviour
         return inventoryManager.woodCount >= currentObject.GetComponent<BuildingObject>().wood;
     }
 
+    void BuildLocally(int buildI)
+    {
+        GameObject placed = Instantiate(buildObjects[buildI].obj, currentObject.transform.position, currentObject.transform.rotation);
+        recentlyPlaced.Insert(0, placed);
+        placed.GetComponent<Collider>().enabled = true;
+        placed.GetComponent<BuildingObject>().status = BuildingObject.Status.PLACED;
+        placed.GetComponent<BuildingObject>().id = index;
+        index++;
+        if (placed.GetComponent<MeshRenderer>())
+        {
+            placed.GetComponent<MeshRenderer>().material = currentObject.GetComponent<MeshRenderer>().material;
+        }
+
+        if (placed.GetComponent<MeshRenderer>())
+        {
+            placed.GetComponent<MeshRenderer>().material = buildObjects[buildI].material;
+        }
+
+        if (placed.transform.childCount > 0)
+        {
+            for (int i = 0; i < placed.transform.childCount; i++)
+            {
+                if (placed.transform.GetChild(i).GetComponent<MeshRenderer>())
+                {
+                    placed.transform.GetChild(i).GetComponent<MeshRenderer>().material = buildObjects[buildI].material;
+                }
+
+            }
+        }
+        placed.layer = 3;
+        NavMeshManager.Instance.BuildNavMesh();
+    }
+
+    [ClientRpc]
+    void BuildCompleteOnServerClientRpc(ClientRpcParams clientRpcParams = default)
+    {
+        if(recentlyPlaced.Count > 0)
+        {
+            Destroy(recentlyPlaced[recentlyPlaced.Count - 1]);
+            recentlyPlaced.RemoveAt(recentlyPlaced.Count - 1);
+        }
+
+    }
+
     [ServerRpc(RequireOwnership = false)]
-    void BuildOnServerRpc(float posX, float posY, float posZ, float rotX, float rotY , float rotZ, int buildI)
+    void BuildOnServerRpc(float posX, float posY, float posZ, float rotX, float rotY , float rotZ, int buildI, ulong clientId)
     {
         GameObject placed = Instantiate(buildObjects[buildI].obj, new Vector3(posX, posY, posZ), Quaternion.Euler(rotX, rotY, rotZ));
         placed.GetComponent<Collider>().enabled = true;
@@ -234,7 +300,11 @@ public class BuildingManager : NetworkBehaviour
         {
             for (int i = 0; i < placed.transform.childCount; i++)
             {
-                placed.transform.GetChild(i).GetComponent<MeshRenderer>().material = buildObjects[buildI].material;
+                if (placed.transform.GetChild(i).GetComponent<MeshRenderer>())
+                {
+                    placed.transform.GetChild(i).GetComponent<MeshRenderer>().material = buildObjects[buildI].material;
+                }
+                
             }
         }
         placed.layer = 3;
@@ -242,7 +312,14 @@ public class BuildingManager : NetworkBehaviour
         UpdateObjectLayerClientRpc(placed.GetComponent<NetworkObject>().NetworkObjectId);
         NavMeshManager.Instance.BuildNavMesh();
 
-        //// Check if the NetworkObject exists in the spawned objects dictionary
+        ClientRpcParams rpcParams = new ClientRpcParams 
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new[] { clientId }
+            }
+        };
+        BuildCompleteOnServerClientRpc(rpcParams);
 
     }
 
@@ -306,6 +383,10 @@ public class BuildingManager : NetworkBehaviour
 
         if (Input.GetButtonDown("Fire1"))
         {
+            if (!IsServer)
+            {
+                hit.collider.gameObject.SetActive(false);
+            }
             DestroyOnServerRpc(hit.collider.GetComponent<NetworkObject>().NetworkObjectId);
             inventoryManager.woodCount += hit.collider.GetComponent<BuildingObject>().wood;
         }
