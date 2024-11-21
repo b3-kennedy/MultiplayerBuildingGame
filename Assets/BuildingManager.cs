@@ -129,12 +129,12 @@ public class BuildingManager : NetworkBehaviour
             if (hit.collider.CompareTag("Wall"))
             {
                 // Dynamically adjust the Y grid size based on the wall's height
-                float wallHeight = hit.collider.bounds.size.y; // Get the wall's height
+                float wallHeight = hit.collider.transform.localScale.y; // Get the wall's height
 
                 // Snap position to align with the top of the wall
                 gridPos = new Vector3(
                     Mathf.Round(hit.point.x / gridSizeX) * gridSizeX,          // Snap X
-                    Mathf.Round(hit.point.y / wallHeight) * wallHeight,          // Snap Y
+                    Mathf.Round(hit.point.y / 4) * 4,          // Snap Y
                     Mathf.Round(hit.point.z / gridSizeZ) * gridSizeZ           // Snap Z
                 );
 
