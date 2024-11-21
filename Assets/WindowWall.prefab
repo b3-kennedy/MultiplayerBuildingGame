@@ -445,6 +445,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   id: 0
+  objectName: WindowWall
   status: 0
   yOffset: 2
   xOffset: 3.1

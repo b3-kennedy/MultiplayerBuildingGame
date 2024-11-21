@@ -140,7 +140,6 @@ public class BuildingManager : NetworkBehaviour
 
                 if (buildObject == floor)
                 {
-                    Debug.Log("floor");
                     gridPos += hit.normal * (buildObject.transform.localScale.x / 2);
                 }
 
@@ -383,7 +382,7 @@ public class BuildingManager : NetworkBehaviour
 
         if (Input.GetButtonDown("Fire1"))
         {
-            if (!IsServer)
+            if (!IsServer && hit.collider != null)
             {
                 hit.collider.gameObject.SetActive(false);
             }

@@ -48,7 +48,7 @@ public class PlayerInterfaceManager : NetworkBehaviour
     void SpawnZombieServerRpc()
     {
         GameObject e = Instantiate(enemy);
-        e.GetComponent<AIMove>().target = transform;
+        e.GetComponent<AIMove>().player = transform;
         e.GetComponent<NetworkObject>().Spawn();
     }
 

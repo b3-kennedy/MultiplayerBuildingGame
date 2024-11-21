@@ -120,11 +120,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   id: 0
-  wood: 10
+  objectName: Floor
   status: 0
   yOffset: 0.1
   xOffset: 0
   zOffset: 0
+  wood: 10
 --- !u!114 &-8018758926850305195
 MonoBehaviour:
   m_ObjectHideFlags: 0

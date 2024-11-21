@@ -10,7 +10,7 @@ public class BuildingObject : MonoBehaviour
 
 
 
-
+    public string objectName;
     public enum Status {PLACED, PLACEHOLDER};
     public Status status;
     public float yOffset;
@@ -22,5 +22,6 @@ public class BuildingObject : MonoBehaviour
 
     private void Start()
     {
+        name = objectName + " " + id.ToString();
     }
 }

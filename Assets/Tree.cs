@@ -6,7 +6,21 @@ using UnityEngine;
 public class Tree : NetworkBehaviour
 {
     public NetworkVariable<float> treeHealth = new NetworkVariable<float>();
+    float localHealth;
 
+    private void Start()
+    {
+        localHealth = treeHealth.Value;
+    }
+
+    public void TakeDamageLocally(float damage)
+    {
+        localHealth -= damage;
+        if(localHealth <= 0)
+        {
+            gameObject.SetActive(false);
+        }
+    }
 
 
     [ServerRpc(RequireOwnership = false)]

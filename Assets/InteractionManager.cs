@@ -41,6 +41,10 @@ public class InteractionManager : NetworkBehaviour
             treeTimer += Time.deltaTime;
             if(treeTimer >= 0.5f)
             {
+                if (!IsServer)
+                {
+                    tree.GetComponent<Tree>().TakeDamageLocally(20);
+                }
                 tree.GetComponent<Tree>().TakeDamageServerRpc(20, OwnerClientId);
                 treeTimer = 0;
             }
