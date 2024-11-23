@@ -121,7 +121,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d9022a716d7138469ad3ae65c1ea1ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  treeHealth: 100
+  treeHealth:
+    m_InternalValue: 0
+  woodItem: {fileID: 2428889300182285357, guid: 4607f7f7ec67eb94698f4aa966757acf, type: 3}
 --- !u!114 &7348242759656127890
 MonoBehaviour:
   m_ObjectHideFlags: 0

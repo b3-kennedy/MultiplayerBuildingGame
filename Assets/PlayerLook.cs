@@ -32,8 +32,8 @@ public class PlayerLook : MonoBehaviour
     void Update()
     {
 
-        float mouseX = Input.GetAxisRaw("Mouse X") * Time.deltaTime * sensitivity;
-        float mouseY = Input.GetAxisRaw("Mouse Y") * Time.deltaTime * sensitivity;
+        float mouseX = Input.GetAxisRaw("Mouse X") * sensitivity;
+        float mouseY = Input.GetAxisRaw("Mouse Y") * sensitivity;
 
         yRot += mouseX;
         xRot -= mouseY;

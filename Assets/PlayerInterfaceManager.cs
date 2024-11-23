@@ -34,6 +34,7 @@ public class PlayerInterfaceManager : NetworkBehaviour
             eyes.layer = 7;
             hud.SetActive(false);
             GetComponent<PlayerLook>().enabled = false;
+            GetComponent<InventoryManager>().enabled = false;
         }
     }
 

@@ -7,6 +7,7 @@ public class Tree : NetworkBehaviour
 {
     public NetworkVariable<float> treeHealth = new NetworkVariable<float>();
     float localHealth;
+    public Item woodItem;
 
     private void Start()
     {
@@ -46,6 +47,11 @@ public class Tree : NetworkBehaviour
     void GiveWoodToClientRpc(float wood, ClientRpcParams clientRpcParams = default)
     {
         GameObject playerObject = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject()?.gameObject;
-        playerObject.GetComponent<InventoryManager>().woodCount += wood;
+
+        for (int i = 0; i < wood; i++)
+        {
+            playerObject.GetComponent<InventoryManager>().AddItem(woodItem);
+        }
+        
     }
 }

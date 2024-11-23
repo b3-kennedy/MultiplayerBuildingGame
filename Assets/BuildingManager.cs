@@ -205,7 +205,7 @@ public class BuildingManager : NetworkBehaviour
 
             if (CheckMaterialRequirement())
             {
-                if (Input.GetButtonDown("Fire1"))
+                if (Input.GetButtonDown("Fire1") && !inventoryManager.inventory.activeSelf)
                 {
 
                     if (!IsServer)
@@ -218,8 +218,11 @@ public class BuildingManager : NetworkBehaviour
                         currentObject.transform.eulerAngles.x, currentObject.transform.eulerAngles.y, currentObject.transform.eulerAngles.z,
                         buildIndex, OwnerClientId);
 
-
-                    inventoryManager.woodCount -= currentObject.GetComponent<BuildingObject>().wood;
+                    for (int i = 0; i < currentObject.GetComponent<BuildingObject>().wood; i++)
+                    {
+                        inventoryManager.RemoveItem(ItemHolder.Instance.wood);
+                        inventoryManager.woodCount--;
+                    }
                     Destroy(currentObject);
 
                 }
@@ -380,14 +383,17 @@ public class BuildingManager : NetworkBehaviour
             mode = Mode.BUILD;
         }
 
-        if (Input.GetButtonDown("Fire1"))
+        if (Input.GetButtonDown("Fire1") && !inventoryManager.inventory.activeSelf)
         {
             if (!IsServer && hit.collider != null)
             {
                 hit.collider.gameObject.SetActive(false);
             }
             DestroyOnServerRpc(hit.collider.GetComponent<NetworkObject>().NetworkObjectId);
-            inventoryManager.woodCount += hit.collider.GetComponent<BuildingObject>().wood;
+            for (int i = 0; i < hit.collider.GetComponent<BuildingObject>().wood; i++)
+            {
+                inventoryManager.AddItem(ItemHolder.Instance.wood);
+            }
         }
     }
 

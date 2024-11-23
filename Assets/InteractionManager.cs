@@ -25,7 +25,7 @@ public class InteractionManager : NetworkBehaviour
         if (!IsOwner) return;
 
 
-        if(Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out RaycastHit hit, interactRange))
+        if(Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out RaycastHit hit, interactRange) && !inventoryManager.inventory.activeSelf)
         {
             if (hit.collider.CompareTag("Tree"))
             {
