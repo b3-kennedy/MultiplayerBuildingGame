@@ -7,10 +7,10 @@ public class ItemIcon : MonoBehaviour
 {
 
     public Item item;
-    public int slotIndex;
-    public int itemCount;
-    public int maxItemCount;
-    public TextMeshProUGUI itemCountText;
+    [HideInInspector] public int slotIndex;
+    [HideInInspector] public int itemCount;
+    [HideInInspector] public int maxItemCount;
+    [HideInInspector] public TextMeshProUGUI itemCountText;
 
     // Start is called before the first frame update
     void Start()

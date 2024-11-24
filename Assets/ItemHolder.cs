@@ -7,6 +7,7 @@ public class ItemHolder : MonoBehaviour
     public static ItemHolder Instance;
 
     public Item wood;
+    public Item stone;
 
     private void Awake()
     {
