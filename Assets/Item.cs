@@ -7,7 +7,7 @@ using UnityEngine.UI;
 
 public class Item : MonoBehaviour
 {
-    public float maxStackCount;
+    public int maxStackCount;
     public bool isStackable = false;
     public GameObject icon;
 }

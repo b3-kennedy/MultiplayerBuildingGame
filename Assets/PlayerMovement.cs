@@ -91,16 +91,35 @@ public class PlayerMovement : NetworkBehaviour
         horizontal = Input.GetAxisRaw("Horizontal");
         vertical = Input.GetAxisRaw("Vertical");
 
-        if(Input.GetKeyDown(KeyCode.Space) && IsGrounded())
+        // Calculate movement direction
+        Vector3 inputDirection = new Vector3(horizontal, 0, vertical).normalized;
+
+        // Check if the player is moving forward relative to their orientation
+        bool isMovingForward = Input.GetKey(KeyCode.W);
+
+        if (Input.GetKeyDown(KeyCode.Space) && IsGrounded())
         {
             Jump();
         }
 
+
+
         if (Input.GetKey(KeyCode.LeftShift))
         {
-            isSprinting = true;
-            state = PlayerState.SPRINT;
-            targetSpeed = sprintSpeed;
+            if (isMovingForward && IsGrounded())
+            {
+                isSprinting = true;
+                state = PlayerState.SPRINT;
+                targetSpeed = sprintSpeed;
+            }
+            else if(!isMovingForward && IsGrounded())
+            {
+                isSprinting = false;
+                state = PlayerState.NORMAL;
+                targetSpeed = normalSpeed;
+                speed = normalSpeed;
+            }
+
         }
         else if (Input.GetKeyUp(KeyCode.LeftShift) && IsGrounded())
         {

@@ -2,13 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.EventSystems;
 
-public class ItemSlot : MonoBehaviour
+public class ItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     public Item item;
     public TextMeshProUGUI numberText;
     GameObject spawnedIcon;
     public int itemCount;
+    public int slotIndex;
+    [HideInInspector] public InventoryManager inventoryManager;
 
     // Start is called before the first frame update
     void Start()
@@ -24,38 +27,62 @@ public class ItemSlot : MonoBehaviour
         {
             item = null;
             numberText.gameObject.SetActive(false);
-            Destroy(spawnedIcon);
+            if(item != null)
+            {
+                Destroy(spawnedIcon);
+            }
+            
             itemCount = 0;
         }
     }
+    
 
-    public void OnItemGained(Item itemToGain)
+    public bool OnItemGained(Item itemToGain)
     {
-
-        if (item == null)
+        if(itemCount < itemToGain.maxStackCount)
         {
-            item = itemToGain;
-            spawnedIcon = Instantiate(item.icon, transform);
-            spawnedIcon.GetComponent<RectTransform>().localPosition = Vector3.zero;
-            itemCount++;
-            if (item.isStackable)
+            if (item == null)
             {
+                item = itemToGain;
+                spawnedIcon = Instantiate(item.icon, transform);
+                spawnedIcon.GetComponent<RectTransform>().localPosition = Vector3.zero;
+                spawnedIcon.GetComponent<ItemIcon>().slotIndex = slotIndex;
+                itemCount++;
+                if (item.isStackable)
+                {
+                    numberText.text = itemCount.ToString();
+                    numberText.gameObject.SetActive(true);
+
+                }
+                return true;
+            }
+            else if (itemToGain == item && item.isStackable)
+            {
+                itemCount++;
                 numberText.text = itemCount.ToString();
                 numberText.gameObject.SetActive(true);
+                return true;
 
             }
-        }
-        else if(itemToGain == item && item.isStackable)
-        {
-            itemCount++;
-            numberText.text = itemCount.ToString();
-            numberText.gameObject.SetActive(true);
-            
+            else
+            {
+                return false;
+            }
         }
         else
         {
-            Debug.Log("Could not add new item");
+            return false;
         }
 
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        inventoryManager.OnSlotHoverEnter(this);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        inventoryManager.OnSlotHoverExit(this);
     }
 }
