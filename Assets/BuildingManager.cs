@@ -29,7 +29,7 @@ public class BuildingManager : NetworkBehaviour
     public GameObject windowWall;
 
     public GameObject buildObject;
-    GameObject currentObject;
+    [HideInInspector] public GameObject currentObject;
     public LayerMask layer;
     public LayerMask destroyLayer;
 

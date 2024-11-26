@@ -47,6 +47,10 @@ public class ItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
                 spawnedIcon = Instantiate(item.icon, transform);
                 spawnedIcon.GetComponent<RectTransform>().localPosition = Vector3.zero;
                 spawnedIcon.GetComponent<ItemIcon>().slotIndex = slotIndex;
+                if(transform.parent == inventoryManager.toolBeltParent)
+                {
+                    spawnedIcon.GetComponent<ItemIcon>().isInToolbelt = true;
+                }
                 itemCount++;
                 if (item.isStackable)
                 {

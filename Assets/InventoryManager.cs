@@ -6,8 +6,10 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
+using System.Linq;
+using System;
 
-public class InventoryManager : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
+public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler
 {
 
     public float woodCount;
@@ -29,8 +31,12 @@ public class InventoryManager : MonoBehaviour, IPointerDownHandler, IPointerUpHa
     public Transform toolBeltParent;
     public Transform slotsParent;
 
+    public Transform toolBeltInvPos;
+    public Transform toolBeltHudPos;
+
     List<GameObject> visibleBackpackSlots = new List<GameObject>();
     List<GameObject> visibleToolbeltSlots = new List<GameObject>();
+
 
     public KeyCode inventoryKey = KeyCode.I;
 
@@ -38,36 +44,72 @@ public class InventoryManager : MonoBehaviour, IPointerDownHandler, IPointerUpHa
     GameObject originalSlot;
 
     ItemSlot hoverSlot;
+    int currentSelectedIndex = 0;
+
+    PlayerInterfaceManager playerInterfaceManager;
+    BuildingManager buildingManager;
+    Transform toolHoldSlot;
 
     // Start is called before the first frame update
     void Start()
     {
+
+        buildingManager = GetComponent<BuildingManager>();
+        playerInterfaceManager = GetComponent<PlayerInterfaceManager>();
+        toolHoldSlot = playerInterfaceManager.holder.transform.GetChild(1);
+
         backpackTabButton.onClick.AddListener(OpenBackpackTab);
         equipmentTabButton.onClick.AddListener(OpenEquipmentTab);
         inventory.SetActive(false);
         OpenBackpackTab();
+
+        currentSelectedIndex = -1;
 
         for (int i = 0; i < slotsParent.childCount; i++)
         {
             slotsParent.GetChild(i).GetComponent<ItemSlot>().slotIndex = i;
             slotsParent.GetChild(i).GetComponent<ItemSlot>().inventoryManager = this;
         }
+
+        for (int i = 0;i < toolBeltParent.childCount; i++)
+        {
+            toolBeltParent.GetChild(i).GetComponent<ItemSlot>().slotIndex = i;
+            toolBeltParent.GetChild(i).GetComponent<ItemSlot>().inventoryManager = this;
+        }
+
+        toolBeltParent.SetParent(inventory.transform.parent);
+        toolBeltParent.position = toolBeltHudPos.position;
     }
 
     private void Update()
     {
         if (Input.GetKeyDown(inventoryKey) && inventory.activeSelf)
         {
+            toolBeltParent.SetParent(inventory.transform.parent);
+            toolBeltParent.transform.localPosition = toolBeltHudPos.localPosition;
             inventory.SetActive(false);
             Cursor.lockState = CursorLockMode.Locked;
             GetComponent<PlayerLook>().enabled = true;
         }
         else if(Input.GetKeyDown(inventoryKey) && !inventory.activeSelf)
         {
+            toolBeltParent.SetParent(backpackTab.transform);
+            toolBeltParent.transform.localPosition = toolBeltInvPos.localPosition;
             inventory.SetActive(true);
+            currentSelectedIndex = -1;
+            for (int i = 0; i < toolBeltParent.childCount; i++)
+            {
+                toolBeltParent.GetChild(i).GetChild(2).gameObject.SetActive(false);
+            }
             Cursor.lockState = CursorLockMode.None;
             GetComponent<PlayerLook>().enabled = false;
         }
+
+        if (!inventory.activeSelf)
+        {
+            ToolbeltSlotSelection();
+        }
+
 
         if(dragItem != null)
         {
@@ -100,6 +142,86 @@ public class InventoryManager : MonoBehaviour, IPointerDownHandler, IPointerUpHa
                 
             }
 
+        }
+
+        if (Input.GetKeyDown(KeyCode.B))
+        {
+            AddItem(ItemHolder.Instance.stone);
+        }
+    }
+
+    void ToolbeltSlotSelection()
+    {
+        if (buildingManager.mode == BuildingManager.Mode.NORMAL)
+        {
+            float scrollInput = Input.GetAxis("Mouse ScrollWheel");
+            int totalSlots = toolBeltParent.childCount;
+
+            if (scrollInput != 0f)
+            {
+                do
+                {
+                    if (scrollInput > 0f) // Scroll up
+                    {
+                        currentSelectedIndex = (currentSelectedIndex - 1 + totalSlots) % totalSlots;
+                    }
+                    else if (scrollInput < 0f) // Scroll down
+                    {
+                        currentSelectedIndex = (currentSelectedIndex + 1) % totalSlots;
+                    }
+                }
+                while (!toolBeltParent.GetChild(currentSelectedIndex).gameObject.activeSelf);
+
+                SelectToolSlot(toolBeltParent.GetChild(currentSelectedIndex).gameObject, currentSelectedIndex);
+            }
+
+            for (int i = 0; i < toolBeltParent.childCount; i++)
+            {
+                if (toolBeltParent.GetChild(i).gameObject.activeSelf)
+                {
+                    // Check if any key from 1 to 9 is pressed
+                    for (int key = 1; key <= 9; key++)
+                    {
+                        if (Input.GetKeyDown(key.ToString()))
+                        {
+                            int inputIndex = key - 1; // Map key 1-9 to index 0-8
+
+                            if (i == inputIndex) // Match index with active slot
+                            {
+                                SelectToolSlot(toolBeltParent.GetChild(i).gameObject, i);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void SelectToolSlot(GameObject selectedSlot, int selectedIndex)
+    {
+        for (int i = 0; i < toolBeltParent.childCount; i++)
+        {
+            GameObject slot = toolBeltParent.GetChild(i).gameObject;
+
+            if (i == selectedIndex)
+            {
+                // Activate the 2nd child for the selected slot
+                slot.transform.GetChild(2).gameObject.SetActive(true);
+                if(slot.GetComponent<ToolbeltSlot>().activeItem != null)
+                {
+                    slot.GetComponent<ToolbeltSlot>().activeItem.SetActive(true);
+                }
+            }
+            else
+            {
+                // Deactivate the 2nd child for all other slots
+                slot.transform.GetChild(2).gameObject.SetActive(false);
+                if (slot.GetComponent<ToolbeltSlot>().activeItem != null)
+                {
+                    slot.GetComponent<ToolbeltSlot>().activeItem.SetActive(false);
+                }
+            }
         }
     }
 
@@ -135,6 +257,7 @@ public class InventoryManager : MonoBehaviour, IPointerDownHandler, IPointerUpHa
             {
                 toolBeltParent.GetChild(i).gameObject.SetActive(true);
                 visibleToolbeltSlots.Add(toolBeltParent.GetChild(i).gameObject);
+
             }
         }
         else
@@ -142,6 +265,7 @@ public class InventoryManager : MonoBehaviour, IPointerDownHandler, IPointerUpHa
             for (int i = 0; i < toolBeltParent.childCount; i++)
             {
                 toolBeltParent.GetChild(i).gameObject.SetActive(false);
+                
             }
         }
 
@@ -164,7 +288,16 @@ public class InventoryManager : MonoBehaviour, IPointerDownHandler, IPointerUpHa
         {
             foreach (var slot in visibleBackpackSlots)
             {
-                if(slot.GetComponent<ItemSlot>().itemCount < item.maxStackCount)
+                if(slot.GetComponent<ItemSlot>().item == null)
+                {
+                    slot.GetComponent<ItemSlot>().OnItemGained(item);
+                    if (item.GetComponent<Wood>())
+                    {
+                        woodCount++;
+                    }
+                    return;
+                }
+                else if(slot.GetComponent<ItemSlot>().item == item && slot.GetComponent<ItemSlot>().itemCount < item.maxStackCount)
                 {
                     slot.GetComponent<ItemSlot>().OnItemGained(item);
                     if (item.GetComponent<Wood>())
@@ -220,8 +353,17 @@ public class InventoryManager : MonoBehaviour, IPointerDownHandler, IPointerUpHa
             dragItem = eventData.pointerCurrentRaycast.gameObject;
             dragItem.transform.SetParent(inventory.transform);
             dragItem.GetComponent<Image>().raycastTarget = false;
-            originalSlot = slotsParent.GetChild(dragItem.GetComponent<ItemIcon>().slotIndex).gameObject;
-            originalSlot.GetComponent<ItemSlot>().item = null;
+            if (dragItem.GetComponent<ItemIcon>().isInToolbelt)
+            {
+                originalSlot = toolBeltParent.GetChild(dragItem.GetComponent<ItemIcon>().slotIndex).gameObject;
+                originalSlot.GetComponent<ItemSlot>().item = null;
+            }
+            else
+            {
+                originalSlot = slotsParent.GetChild(dragItem.GetComponent<ItemIcon>().slotIndex).gameObject;
+                originalSlot.GetComponent<ItemSlot>().item = null;
+            }
+
             dragItem.GetComponent<ItemIcon>().itemCount = originalSlot.GetComponent<ItemSlot>().itemCount;
             dragItem.GetComponent<ItemIcon>().maxItemCount = originalSlot.GetComponent<ItemSlot>().itemCount;
             dragItem.GetComponent<ItemIcon>().itemCountText.text = dragItem.GetComponent<ItemIcon>().itemCount.ToString();
@@ -233,16 +375,39 @@ public class InventoryManager : MonoBehaviour, IPointerDownHandler, IPointerUpHa
 
     }
 
+    void OnItemAddedToToolbelt(Item item, int index)
+    {
+        if(item.itemObject.TryGetComponent(out Tool toolComponent))
+        {
+            GameObject spawnedTool = Instantiate(item.itemObject, toolHoldSlot);
+            spawnedTool.SetActive(false);
+            spawnedTool.GetComponent<Tool>().player = gameObject;
+            spawnedTool.transform.localPosition = toolComponent.holdPos;
+            spawnedTool.transform.localEulerAngles = toolComponent.holdRot;
+            if (spawnedTool.GetComponent<Collider>())
+            {
+                spawnedTool.GetComponent<Collider>().enabled = false;
+            }
+            toolBeltParent.GetChild(index).GetComponent<ToolbeltSlot>().activeItem = spawnedTool;
+        }
+
+    }
+
     public void OnPointerUp(PointerEventData eventData)
     {
         if (eventData.pointerCurrentRaycast.gameObject.transform.parent.GetComponent<ItemSlot>() && dragItem != null)
         {
             ItemSlot slot = eventData.pointerCurrentRaycast.gameObject.transform.parent.GetComponent<ItemSlot>();
+
+            if(slot.transform.parent == toolBeltParent)
+            {
+                OnItemAddedToToolbelt(dragItem.GetComponent<ItemIcon>().item, slot.slotIndex);
+            }
+
             bool val = slot.OnItemGained(dragItem.GetComponent<ItemIcon>().item);
             int addingItemCount = (dragItem.GetComponent<ItemIcon>().itemCount + slot.itemCount)-1;
             if (val && addingItemCount <= dragItem.GetComponent<ItemIcon>().item.maxStackCount)
             {
-                Debug.Log("1");
                 for (int i = 0; i < dragItem.GetComponent<ItemIcon>().itemCount-1; i++)
                 {
                     slot.OnItemGained(dragItem.GetComponent<ItemIcon>().item);
@@ -250,7 +415,6 @@ public class InventoryManager : MonoBehaviour, IPointerDownHandler, IPointerUpHa
             }
             else if(val && addingItemCount > dragItem.GetComponent<ItemIcon>().item.maxStackCount)
             {
-                Debug.Log("2");
                 int difference = addingItemCount - dragItem.GetComponent<ItemIcon>().item.maxStackCount;
                 for (int i = 0; i < (dragItem.GetComponent<ItemIcon>().itemCount - 1) - difference; i++)
                 {

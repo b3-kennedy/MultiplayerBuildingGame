@@ -12,6 +12,8 @@ public class PlayerInterfaceManager : NetworkBehaviour
     public GameObject enemy;
     public GameObject eyes;
     public GameObject cameraHolder;
+    public GameObject holder;
+    public Transform serverItemPos;
     public Transform camPos;
     int zombieCount = 0;
 
@@ -21,7 +23,7 @@ public class PlayerInterfaceManager : NetworkBehaviour
         {
             transform.position = new Vector3(0, 2, 0);
 
-            GameObject holder = Instantiate(cameraHolder);
+            holder = Instantiate(cameraHolder);
             holder.GetComponent<MoveCamera>().camPos = camPos;
             GetComponent<PlayerLook>().player = gameObject;
             GetComponent<PlayerLook>().orientation = GetComponent<PlayerMovement>().orientation;

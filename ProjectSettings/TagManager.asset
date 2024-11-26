@@ -8,6 +8,8 @@ TagManager:
   - Wall
   - Floor
   - Tree
+  - Axe
+  - Hammer
   layers:
   - Default
   - TransparentFX

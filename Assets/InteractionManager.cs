@@ -27,27 +27,35 @@ public class InteractionManager : NetworkBehaviour
 
         if(Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out RaycastHit hit, interactRange) && !inventoryManager.inventory.activeSelf)
         {
-            if (hit.collider.CompareTag("Tree"))
+            if (hit.collider.CompareTag("Axe"))
             {
-                InteractWithTree(hit.collider.gameObject);
+
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    inventoryManager.AddItem(hit.collider.GetComponent<Axe>().item);
+
+                    DestroyInteractObjServerRpc(hit.collider.gameObject.GetComponent<NetworkObject>().NetworkObjectId);
+                }
+
+            }
+            else if (hit.collider.CompareTag("Hammer"))
+            {
+                if (Input.GetKeyDown(KeyCode.E))
+                {
+                    inventoryManager.AddItem(hit.collider.GetComponent<Hammer>().item);
+
+                    DestroyInteractObjServerRpc(hit.collider.gameObject.GetComponent<NetworkObject>().NetworkObjectId);
+                }
             }
         }
     }
 
-    void InteractWithTree(GameObject tree)
+    [ServerRpc]
+    void DestroyInteractObjServerRpc(ulong objId)
     {
-        if (Input.GetButton("Fire1"))
+        if(NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(objId, out NetworkObject obj))
         {
-            treeTimer += Time.deltaTime;
-            if(treeTimer >= 0.5f)
-            {
-                if (!IsServer)
-                {
-                    tree.GetComponent<Tree>().TakeDamageLocally(20);
-                }
-                tree.GetComponent<Tree>().TakeDamageServerRpc(20, OwnerClientId);
-                treeTimer = 0;
-            }
+            obj.Despawn();
         }
     }
 }
