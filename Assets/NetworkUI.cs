@@ -2,21 +2,20 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class NetworkUI : NetworkBehaviour
 {
-    public Camera menuCamera;
-    public NetworkObject player;
     public GameObject buttons;
+    public GameObject playerCard;
 
 
     public void Host()
     {
         NetworkManager.Singleton.StartHost();
+        NetworkManager.Singleton.SceneManager.LoadScene("LobbyScene", LoadSceneMode.Single);
 
-        // Disable menu camera and button
-        menuCamera.gameObject.SetActive(false);
-        buttons.SetActive(false);
+
 
 
     }
@@ -25,10 +24,13 @@ public class NetworkUI : NetworkBehaviour
     {
         NetworkManager.Singleton.StartClient();
 
-        // Disable menu camera and button
-        menuCamera.gameObject.SetActive(false);
-        buttons.SetActive(false);
+    }
 
+
+    [ServerRpc(RequireOwnership = false)]
+    void SpawnPlayerCardServerRpc()
+    {
+        GameObject card = Instantiate(playerCard);
     }
 
    

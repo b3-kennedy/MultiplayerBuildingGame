@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 public class Axe : Tool
@@ -15,7 +16,6 @@ public class Axe : Tool
 
     private void Update()
     {
-
         if (gameObject.activeSelf)
         {
             if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out RaycastHit hit, 5f))
@@ -39,7 +39,10 @@ public class Axe : Tool
                 {
                     tree.GetComponent<Tree>().TakeDamageLocally(20);
                 }
-                tree.GetComponent<Tree>().TakeDamageServerRpc(20, OwnerClientId);
+
+                Debug.Log(player.GetComponent<NetworkObject>().OwnerClientId);
+
+                tree.GetComponent<Tree>().TakeDamageServerRpc(20, player.GetComponent<NetworkObject>().OwnerClientId);
                 treeTimer = 0;
             }
         }

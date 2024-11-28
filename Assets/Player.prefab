@@ -534,7 +534,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &7255778293394523701
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3713,6 +3713,7 @@ MonoBehaviour:
   ramp: {fileID: 2233280187062361949, guid: c2196f810edcb234895ed59f78cf8a93, type: 3}
   windowWall: {fileID: 4641605487821076077, guid: d05401cc53939a142abfa0666dadaf2c, type: 3}
   buildObject: {fileID: 5475728684802970758, guid: 7bfbbdf5be5fda2428aad910ee001901, type: 3}
+  currentObject: {fileID: 0}
   layer:
     serializedVersion: 2
     m_Bits: 63
@@ -3794,9 +3795,11 @@ MonoBehaviour:
   hud: {fileID: 5651561278499847541}
   enemy: {fileID: 8572411878644357819, guid: 93071ab27d684404b9113866fbe6214b, type: 3}
   eyes: {fileID: 228425588520235914}
-  cameraHolder: {fileID: 3008255306882374938, guid: 45001c6a25963e0498fa168ff59defe4, type: 3}
+  cameraHolder: {fileID: 1678722577078559864, guid: ad363c3ba07071548a78b209bbde7b4a, type: 3}
+  serverCameraHolder: {fileID: 1678722577078559864, guid: cf4169e80b2971b4b9928ecf759cbfab, type: 3}
   holder: {fileID: 0}
   serverItemPos: {fileID: 1719303588834419496}
+  wall: {fileID: 5475728684802970758, guid: 7bfbbdf5be5fda2428aad910ee001901, type: 3}
   camPos: {fileID: 1526563319930439138}
 --- !u!114 &5022840741106582863
 MonoBehaviour:

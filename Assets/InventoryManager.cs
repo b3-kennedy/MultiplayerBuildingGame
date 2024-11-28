@@ -8,6 +8,7 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using System.Linq;
 using System;
+using System.Data.Common;
 
 public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler
 {
@@ -308,7 +309,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
                 }
             }
         }
-        Debug.Log("Inventory Full");
+        
     }
 
     void OpenEquipmentTab()
@@ -380,7 +381,9 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         if(item.itemObject.TryGetComponent(out Tool toolComponent))
         {
             GameObject spawnedTool = Instantiate(item.itemObject, toolHoldSlot);
+            //spawnedTool.GetComponent<NetworkObject>().SpawnWithOwnership(NetworkManager.Singleton.LocalClientId);
             spawnedTool.SetActive(false);
+            Debug.Log(gameObject.name);
             spawnedTool.GetComponent<Tool>().player = gameObject;
             spawnedTool.transform.localPosition = toolComponent.holdPos;
             spawnedTool.transform.localEulerAngles = toolComponent.holdRot;
@@ -389,7 +392,14 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
                 spawnedTool.GetComponent<Collider>().enabled = false;
             }
             toolBeltParent.GetChild(index).GetComponent<ToolbeltSlot>().activeItem = spawnedTool;
+
         }
+
+    }
+
+    [ServerRpc]
+    void SpawnToolServerRpc(ulong clientId)
+    {
 
     }
 

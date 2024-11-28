@@ -7,7 +7,7 @@ public class Tool : Item
     public Item item;
     public Vector3 holdPos;
     public Vector3 holdRot;
-    [HideInInspector] public GameObject player;
+    public GameObject player;
 
     private void Start()
     {

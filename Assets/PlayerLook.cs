@@ -7,7 +7,7 @@ public class PlayerLook : MonoBehaviour
 {
 
     public float sensitivity;
-    [HideInInspector] public GameObject player;
+    public GameObject player;
     Transform playerObj;
     public Transform orientation;
     public Transform cam;
