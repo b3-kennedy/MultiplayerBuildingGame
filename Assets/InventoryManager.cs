@@ -58,7 +58,6 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
 
         buildingManager = GetComponent<BuildingManager>();
         playerInterfaceManager = GetComponent<PlayerInterfaceManager>();
-        toolHoldSlot = playerInterfaceManager.holder.transform.GetChild(1);
 
         backpackTabButton.onClick.AddListener(OpenBackpackTab);
         equipmentTabButton.onClick.AddListener(OpenEquipmentTab);
@@ -405,7 +404,9 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         var itemObj = holder.GetItemObjectFromId(itemId);
 
         GameObject item = Instantiate(itemObj, camHolder.transform);
+        
         item.GetComponent<NetworkObject>().SpawnWithOwnership(clientId);
+        item.transform.SetParent(PlayerManager.Instance.GetClientHolder(clientId).transform);
         item.gameObject.SetActive(false);
         Debug.Log(item.name + " spawned for player " + clientId.ToString());
         
@@ -420,7 +421,6 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
             if(NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(itemId, out var item))
             {
                 item.gameObject.SetActive(true);
-                item.transform.SetParent(PlayerManager.Instance.GetClientHolder(clientId).transform);
                 item.transform.localPosition = item.GetComponent<Tool>().holdPos;
                 item.transform.localEulerAngles = item.GetComponent<Tool>().holdRot;
             }
