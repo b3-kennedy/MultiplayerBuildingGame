@@ -12,4 +12,5 @@ public class Item : NetworkBehaviour
     public bool isStackable = false;
     public GameObject icon;
     public GameObject itemObject;
+    public int id;
 }

@@ -163,8 +163,8 @@ public class PlayerManager : NetworkBehaviour
     {
         if(NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(holderId, out var holder))
         {
-            holder.transform.GetChild(1).GetComponent<Camera>().enabled = true;
-            holder.transform.GetChild(1).GetComponent<AudioListener>().enabled = true;
+            holder.transform.GetComponent<Camera>().enabled = true;
+            holder.transform.GetComponent<AudioListener>().enabled = true;
         }
 
         if(NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(playerId, out var player))
@@ -229,7 +229,7 @@ public class PlayerManager : NetworkBehaviour
 
                 player.name = "Player" + (clientId + 1).ToString();
                 player.GetComponent<PlayerInterfaceManager>().holder = holder.gameObject;
-                player.GetComponent<PlayerLook>().cam = holder.transform.GetChild(1);
+                player.GetComponent<PlayerLook>().cam = holder.transform;
                 holder.GetComponent<MoveCamera>().camPos = player.GetComponent<PlayerInterfaceManager>().camPos;
                 holder.name = "Player" + (clientId + 1).ToString() + "Holder";
                 player.GetComponent<PlayerLook>().player = player.gameObject;
@@ -415,6 +415,24 @@ public class PlayerManager : NetworkBehaviour
                 return client3Player;
             case 3:
                 return client4Player;
+            default:
+                break;
+        }
+        return null;
+    }
+
+    public GameObject GetClientHolder(ulong id)
+    {
+        switch (id)
+        {
+            case 0:
+                return client1Holder;
+            case 1:
+                return client2Holder;
+            case 2:
+                return client3Holder;
+            case 3:
+                return client4Holder;
             default:
                 break;
         }

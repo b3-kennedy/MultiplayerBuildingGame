@@ -9,6 +9,7 @@ using UnityEngine.EventSystems;
 using System.Linq;
 using System;
 using System.Data.Common;
+using System.Reflection;
 
 public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler
 {
@@ -381,9 +382,6 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         if(item.itemObject.TryGetComponent(out Tool toolComponent))
         {
             GameObject spawnedTool = Instantiate(item.itemObject, toolHoldSlot);
-            //spawnedTool.GetComponent<NetworkObject>().SpawnWithOwnership(NetworkManager.Singleton.LocalClientId);
-            spawnedTool.SetActive(false);
-            Debug.Log(gameObject.name);
             spawnedTool.GetComponent<Tool>().player = gameObject;
             spawnedTool.transform.localPosition = toolComponent.holdPos;
             spawnedTool.transform.localEulerAngles = toolComponent.holdRot;
@@ -392,16 +390,43 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
                 spawnedTool.GetComponent<Collider>().enabled = false;
             }
             toolBeltParent.GetChild(index).GetComponent<ToolbeltSlot>().activeItem = spawnedTool;
+            SpawnItemObjectOnServerRpc(spawnedTool.GetComponent<Item>().id, NetworkManager.Singleton.LocalClientId);
 
         }
 
     }
 
-    [ServerRpc]
-    void SpawnToolServerRpc(ulong clientId)
+    [ServerRpc(RequireOwnership = false)]
+    void SpawnItemObjectOnServerRpc(int itemId, ulong clientId)
     {
+        var holder = ItemHolder.Instance;
+        var playerObj = PlayerManager.Instance.GetClientPlayer(clientId);
+        var camHolder = PlayerManager.Instance.GetClientHolder(clientId);
+        var itemObj = holder.GetItemObjectFromId(itemId);
 
+        GameObject item = Instantiate(itemObj, camHolder.transform);
+        item.GetComponent<NetworkObject>().SpawnWithOwnership(clientId);
+        item.gameObject.SetActive(false);
+        Debug.Log(item.name + " spawned for player " + clientId.ToString());
+        
+        EnableItemForOtherClientRpc(clientId, item.GetComponent<NetworkObject>().NetworkObjectId);
     }
+
+    [ClientRpc]
+    void EnableItemForOtherClientRpc(ulong clientId, ulong itemId)
+    {
+        if(NetworkManager.Singleton.LocalClientId != clientId)
+        {
+            if(NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(itemId, out var item))
+            {
+                item.gameObject.SetActive(true);
+                item.transform.SetParent(PlayerManager.Instance.GetClientHolder(clientId).transform);
+                item.transform.localPosition = item.GetComponent<Tool>().holdPos;
+                item.transform.localEulerAngles = item.GetComponent<Tool>().holdRot;
+            }
+        }
+    }
+
 
     public void OnPointerUp(PointerEventData eventData)
     {

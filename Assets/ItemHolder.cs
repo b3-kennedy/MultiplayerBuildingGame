@@ -8,7 +8,7 @@ using UnityEngine;
 public class ItemObjectAndId
 {
     public GameObject itemObject;
-    public int id;
+    [HideInInspector] public int id;
 }
 
 public class ItemHolder : MonoBehaviour
@@ -21,6 +21,8 @@ public class ItemHolder : MonoBehaviour
     [Header("Item Objects")]
     public ItemObjectAndId[] objects;
 
+    int index = 0;
+
     private void Awake()
     {
         if (Instance == null)
@@ -32,6 +34,16 @@ public class ItemHolder : MonoBehaviour
             Destroy(gameObject);
         }
         
+    }
+
+    private void Start()
+    {
+        foreach (var item in objects)
+        {
+            item.itemObject.GetComponent<Item>().id = index;
+            item.id = index;
+            index++;
+        }
     }
 
     public int GetItemIdFromGameObject(GameObject obj)

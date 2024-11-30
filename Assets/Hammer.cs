@@ -28,11 +28,14 @@ public class Hammer : Tool
     // Update is called once per frame
     void Update()
     {
-
-        if (gameObject.activeSelf && buildingManager.enabled == false)
+        if(buildingManager != null)
         {
-            buildingManager.enabled = true;
+            if (gameObject.activeSelf && buildingManager.enabled == false)
+            {
+                buildingManager.enabled = true;
+            }
         }
+
     }
 
     private void OnDisable()
