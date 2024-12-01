@@ -48,7 +48,8 @@ MonoBehaviour:
   maxStackCount: 1
   isStackable: 0
   icon: {fileID: 2459650779089018946, guid: 54bb500830ce4944faee9999d29317f1, type: 3}
-  itemObject: {fileID: 2378354967715753268, guid: e287fc6e0cbfd134a99919fd534612c2, type: 3}
+  itemObject: {fileID: 8571250061241964462, guid: 6cbab39aed22ed945aa9b52fdce35954, type: 3}
+  id: 0
 --- !u!114 &1771518859788837269
 MonoBehaviour:
   m_ObjectHideFlags: 0

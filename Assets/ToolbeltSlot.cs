@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 public class ToolbeltSlot : MonoBehaviour
@@ -19,7 +20,9 @@ public class ToolbeltSlot : MonoBehaviour
     {
         if(slot.item == null && activeItem != null)
         {
-            Destroy(activeItem);
+            slot.inventoryManager.DestroyItemOnServerRpc(activeItem.GetComponent<NetworkObject>().NetworkObjectId);
         }
     }
+
+
 }

@@ -6,10 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
-using System.Linq;
 using System;
-using System.Data.Common;
-using System.Reflection;
 
 public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler
 {
@@ -39,6 +36,8 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
     List<GameObject> visibleBackpackSlots = new List<GameObject>();
     List<GameObject> visibleToolbeltSlots = new List<GameObject>();
 
+    GameObject spawnedTool;
+
 
     public KeyCode inventoryKey = KeyCode.I;
 
@@ -58,7 +57,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
 
         buildingManager = GetComponent<BuildingManager>();
         playerInterfaceManager = GetComponent<PlayerInterfaceManager>();
-
+        
         backpackTabButton.onClick.AddListener(OpenBackpackTab);
         equipmentTabButton.onClick.AddListener(OpenEquipmentTab);
         inventory.SetActive(false);
@@ -84,6 +83,12 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
 
     private void Update()
     {
+
+        if(toolHoldSlot == null)
+        {
+            toolHoldSlot = PlayerManager.Instance.GetClientHolder(NetworkManager.Singleton.LocalClientId).transform;
+        }
+
         if (Input.GetKeyDown(inventoryKey) && inventory.activeSelf)
         {
             toolBeltParent.SetParent(inventory.transform.parent);
@@ -212,6 +217,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
                 if(slot.GetComponent<ToolbeltSlot>().activeItem != null)
                 {
                     slot.GetComponent<ToolbeltSlot>().activeItem.SetActive(true);
+                    EnableOrDisableToolbeltItemServerRpc(true, slot.GetComponent<ToolbeltSlot>().activeItem.GetComponent<NetworkObject>().NetworkObjectId, NetworkManager.Singleton.LocalClientId, i);
                 }
             }
             else
@@ -221,7 +227,31 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
                 if (slot.GetComponent<ToolbeltSlot>().activeItem != null)
                 {
                     slot.GetComponent<ToolbeltSlot>().activeItem.SetActive(false);
+                    EnableOrDisableToolbeltItemServerRpc(false, slot.GetComponent<ToolbeltSlot>().activeItem.GetComponent<NetworkObject>().NetworkObjectId, NetworkManager.Singleton.LocalClientId, i);
                 }
+            }
+        }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void EnableOrDisableToolbeltItemServerRpc(bool isEnable, ulong itemId, ulong clientId, int slotIndex)
+    {
+        EnableOrDisableToolbeltItemClientRpc(isEnable, itemId, clientId, slotIndex);
+    }
+
+    [ClientRpc]
+    void EnableOrDisableToolbeltItemClientRpc(bool isEnable, ulong itemId, ulong clientId, int slotIndex)
+    {
+
+        if(NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(itemId, out var item))
+        {
+            if (isEnable)
+            {
+                item.gameObject.SetActive(true);
+            }
+            else
+            {
+                item.gameObject.SetActive(false);
             }
         }
     }
@@ -380,23 +410,27 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
     {
         if(item.itemObject.TryGetComponent(out Tool toolComponent))
         {
-            GameObject spawnedTool = Instantiate(item.itemObject, toolHoldSlot);
+            spawnedTool = Instantiate(item.itemObject, toolHoldSlot);
+            var oldName = spawnedTool.name;
+            spawnedTool.name = "local" + oldName;
+            spawnedTool.SetActive(false);
             spawnedTool.GetComponent<Tool>().player = gameObject;
             spawnedTool.transform.localPosition = toolComponent.holdPos;
             spawnedTool.transform.localEulerAngles = toolComponent.holdRot;
+            Debug.Log(toolComponent.holdPos);
             if (spawnedTool.GetComponent<Collider>())
             {
                 spawnedTool.GetComponent<Collider>().enabled = false;
             }
             toolBeltParent.GetChild(index).GetComponent<ToolbeltSlot>().activeItem = spawnedTool;
-            SpawnItemObjectOnServerRpc(spawnedTool.GetComponent<Item>().id, NetworkManager.Singleton.LocalClientId);
+            SpawnItemObjectOnServerRpc(spawnedTool.GetComponent<Item>().id, NetworkManager.Singleton.LocalClientId, index);
 
         }
 
     }
 
     [ServerRpc(RequireOwnership = false)]
-    void SpawnItemObjectOnServerRpc(int itemId, ulong clientId)
+    void SpawnItemObjectOnServerRpc(int itemId, ulong clientId, int index)
     {
         var holder = ItemHolder.Instance;
         var playerObj = PlayerManager.Instance.GetClientPlayer(clientId);
@@ -404,27 +438,67 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         var itemObj = holder.GetItemObjectFromId(itemId);
 
         GameObject item = Instantiate(itemObj, camHolder.transform);
-        
+        var oldName = item.name;
+        item.name = "server" + oldName;
         item.GetComponent<NetworkObject>().SpawnWithOwnership(clientId);
+        item.GetComponent<Collider>().enabled = false;
+        if (item.GetComponent<Tool>())
+        {
+            item.GetComponent<Tool>().player = playerObj;
+            item.GetComponent<Tool>().enabled = true;
+        }
+
         item.transform.SetParent(PlayerManager.Instance.GetClientHolder(clientId).transform);
         item.gameObject.SetActive(false);
         Debug.Log(item.name + " spawned for player " + clientId.ToString());
         
-        EnableItemForOtherClientRpc(clientId, item.GetComponent<NetworkObject>().NetworkObjectId);
+        EnableItemForOtherClientRpc(clientId, item.GetComponent<NetworkObject>().NetworkObjectId, index);
     }
 
     [ClientRpc]
-    void EnableItemForOtherClientRpc(ulong clientId, ulong itemId)
+    void EnableItemForOtherClientRpc(ulong clientId, ulong itemId, int index)
     {
-        if(NetworkManager.Singleton.LocalClientId != clientId)
+        if(NetworkManager.Singleton.LocalClientId == clientId)
         {
-            if(NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(itemId, out var item))
+            if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(itemId, out var tool))
             {
-                item.gameObject.SetActive(true);
-                item.transform.localPosition = item.GetComponent<Tool>().holdPos;
-                item.transform.localEulerAngles = item.GetComponent<Tool>().holdRot;
+                toolBeltParent.GetChild(index).GetComponent<ToolbeltSlot>().activeItem = tool.gameObject;
             }
+                
+            Destroy(spawnedTool);
         }
+        
+        if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(itemId, out var item))
+        {
+            item.transform.localPosition = item.GetComponent<Tool>().holdPos;
+            item.transform.localEulerAngles = item.GetComponent<Tool>().holdRot;
+        }
+        //if(NetworkManager.Singleton.LocalClientId != clientId)
+        //{
+        //    if(NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(itemId, out var item))
+        //    {
+        //        item.gameObject.SetActive(true);
+        //        item.transform.localPosition = item.GetComponent<Tool>().holdPos;
+        //        item.transform.localEulerAngles = item.GetComponent<Tool>().holdRot;
+        //    }
+        //}
+        //else
+        //{
+        //    if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(itemId, out var item))
+        //    {
+        //        item.gameObject.SetActive(false);
+        //    }
+        //}
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void DestroyItemOnServerRpc(ulong itemId)
+    {
+        if(NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(itemId, out var item))
+        {
+            item.GetComponent<NetworkObject>().Despawn();
+        }
+        
     }
 
 

@@ -35,6 +35,8 @@ public class PlayerManager : NetworkBehaviour
     public NetworkVariable<ulong> player3HolderId;
     public NetworkVariable<ulong> player4HolderId;
 
+    public List<GameObject> localClientToolbeltItems = new List<GameObject>();
+
 
     // Start is called before the first frame update
     void Start()

@@ -554,6 +554,7 @@ MonoBehaviour:
     m_InternalValue: 0
   player4HolderId:
     m_InternalValue: 0
+  localClientToolbeltItems: []
 --- !u!4 &592466383
 Transform:
   m_ObjectHideFlags: 0
@@ -827,7 +828,7 @@ MonoBehaviour:
   objects:
   - itemObject: {fileID: 7967701695326146870, guid: 81a04cb43121ea0488c40b14e0365026, type: 3}
     id: 0
-  - itemObject: {fileID: 2378354967715753268, guid: e287fc6e0cbfd134a99919fd534612c2, type: 3}
+  - itemObject: {fileID: 8571250061241964462, guid: 6cbab39aed22ed945aa9b52fdce35954, type: 3}
     id: 0
 --- !u!4 &1092123443
 Transform:
