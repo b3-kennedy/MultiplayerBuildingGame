@@ -7,6 +7,7 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using System;
+using static UnityEditor.Progress;
 
 public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler
 {
@@ -318,6 +319,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
             if(slot.GetComponent<ItemSlot>().item != null && slot.GetComponent<ItemSlot>().item == item && slot.GetComponent<ItemSlot>().itemCount > 0)
             {
                 slot.GetComponent<ItemSlot>().OnItemRemoved();
+                return;
             }
         }
     }
@@ -328,15 +330,23 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         {
             foreach (var slot in visibleBackpackSlots)
             {
-                if(slot.GetComponent<ItemSlot>().item == null)
+                var itemSlot = slot.GetComponent<ItemSlot>();
+                if (itemSlot.item == item && itemSlot.itemCount < item.maxStackCount)
                 {
                     slot.GetComponent<ItemSlot>().OnItemGained(item);
                     CountMaterials(item);
                     return;
                 }
-                else if(slot.GetComponent<ItemSlot>().item == item && slot.GetComponent<ItemSlot>().itemCount < item.maxStackCount)
+
+            }
+
+            foreach (var slot in visibleBackpackSlots)
+            {
+                var itemSlot = slot.GetComponent<ItemSlot>();
+
+                if (itemSlot.item == null)
                 {
-                    slot.GetComponent<ItemSlot>().OnItemGained(item);
+                    itemSlot.OnItemGained(item);
                     CountMaterials(item);
                     return;
                 }
@@ -344,6 +354,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         }
         
     }
+
 
     void CountMaterials(Item item)
     {

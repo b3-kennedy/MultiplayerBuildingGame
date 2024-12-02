@@ -61,8 +61,9 @@ public class CraftingManager : MonoBehaviour
     }
 
 
-    void GetRecipes()
+    public void GetRecipes()
     {
+        inventoryItems.Clear();
         DestroyCraftingPrefabs();
         craftableItems.Clear();
         foreach (var slot in inventoryManager.visibleBackpackSlots)
@@ -104,11 +105,11 @@ public class CraftingManager : MonoBehaviour
 
                             craftUI.craftableItemIcon.sprite = craftableItem.craftedItem.icon.GetComponent<Image>().sprite;
                             craftUI.craftableItemName.text = craftableItem.itemName;
+                            craftUI.craftableItem = craftableItem.craftedItem;
+                            craftUI.craftingManager = this;
+                            craftUI.craftingRecipe = craftableItem;
 
-                            for (int i = 0; i < craftableItem.itemsRequired.Count; i++)
-                            {
 
-                            }
                             foreach (var matReqItem in craftableItem.itemsRequired)
                             {
                                 Debug.Log(GetItemCount(matReqItem.item));
@@ -118,6 +119,15 @@ public class CraftingManager : MonoBehaviour
 
                                 materialReq.transform.GetChild(1).GetComponent<TextMeshProUGUI>().text =
                                     GetItemCount(matReqItem.item).ToString() + "/" + matReqItem.count.ToString();
+
+                                if(GetItemCount(matReqItem.item) >= matReqItem.count)
+                                {
+                                    materialReq.transform.GetChild(1).GetComponent<TextMeshProUGUI>().color = Color.green;
+                                }
+                                else if(GetItemCount(matReqItem.item) < matReqItem.count)
+                                {
+                                    materialReq.transform.GetChild(1).GetComponent<TextMeshProUGUI>().color = Color.red;
+                                }
                             }
                         }
                     }
@@ -197,7 +207,7 @@ public class CraftingManager : MonoBehaviour
 
     public void OnOpenCraftingMenu()
     {
-        inventoryItems.Clear();
+        
         GetRecipes();
         DisplayNewRecipes();
         CountResourcesForRecipes();

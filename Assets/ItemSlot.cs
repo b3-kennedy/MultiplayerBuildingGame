@@ -25,12 +25,13 @@ public class ItemSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
         numberText.text = itemCount.ToString();
         if(itemCount <= 0)
         {
-            item = null;
-            numberText.gameObject.SetActive(false);
-            if(item != null)
+            if (item != null)
             {
                 Destroy(spawnedIcon);
             }
+            item = null;
+            numberText.gameObject.SetActive(false);
+
             
             itemCount = 0;
         }

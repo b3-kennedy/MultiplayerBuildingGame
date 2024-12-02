@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 3413294272072662910}
   - component: {fileID: 652989063229344461}
   m_Layer: 5
-  m_Name: TestStoneIcon
+  m_Name: TestWoodIcon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -59,11 +59,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74ed9da45facd9446ae306d32f3cab21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  item: {fileID: 1683197520260404454, guid: 38493a3452b2ef24396e89fc17f66a99, type: 3}
+  item: {fileID: 2428889300182285357, guid: 4607f7f7ec67eb94698f4aa966757acf, type: 3}
   slotIndex: 0
   itemCount: 0
   maxItemCount: 0
   itemCountText: {fileID: 0}
+  isInToolbelt: 0
 --- !u!114 &652989063229344461
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -84,7 +85,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10915, guid: 0000000000000000f000000000000000, type: 0}
+  m_Sprite: {fileID: 21300000, guid: fbcfe45bf6b475d47ba000c8b45dfa37, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
