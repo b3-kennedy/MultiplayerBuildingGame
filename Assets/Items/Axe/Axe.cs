@@ -40,8 +40,6 @@ public class Axe : Tool
                     tree.GetComponent<Tree>().TakeDamageLocally(20);
                 }
 
-                Debug.Log(player.GetComponent<NetworkObject>().OwnerClientId);
-
                 tree.GetComponent<Tree>().TakeDamageServerRpc(20, player.GetComponent<NetworkObject>().OwnerClientId);
                 treeTimer = 0;
             }

@@ -12,17 +12,21 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
 {
 
     public float woodCount;
+    public float stoneCount;
 
     public GameObject inventory;
 
     public Button backpackTabButton;
     public Button equipmentTabButton;
+    public Button craftingTabButton;
 
     public GameObject backpackTab;
     public GameObject equipmentTab;
+    public GameObject craftingTab;
 
     public TextMeshProUGUI backpackButtonText;
     public TextMeshProUGUI equipmentButtonText;
+    public TextMeshProUGUI craftingButtonText;
 
     public Backpack backpackSlot;
     public Backpack toolbeltSlot;
@@ -33,7 +37,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
     public Transform toolBeltInvPos;
     public Transform toolBeltHudPos;
 
-    List<GameObject> visibleBackpackSlots = new List<GameObject>();
+    public List<GameObject> visibleBackpackSlots = new List<GameObject>();
     List<GameObject> visibleToolbeltSlots = new List<GameObject>();
 
     GameObject spawnedTool;
@@ -50,16 +54,20 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
     PlayerInterfaceManager playerInterfaceManager;
     BuildingManager buildingManager;
     Transform toolHoldSlot;
+    CraftingManager craftingManager;
 
     // Start is called before the first frame update
     void Start()
     {
 
+        craftingManager = GetComponent<CraftingManager>();
         buildingManager = GetComponent<BuildingManager>();
         playerInterfaceManager = GetComponent<PlayerInterfaceManager>();
         
         backpackTabButton.onClick.AddListener(OpenBackpackTab);
         equipmentTabButton.onClick.AddListener(OpenEquipmentTab);
+        craftingTabButton.onClick.AddListener(OpenCraftingTab);
+
         inventory.SetActive(false);
         OpenBackpackTab();
 
@@ -96,6 +104,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
             inventory.SetActive(false);
             Cursor.lockState = CursorLockMode.Locked;
             GetComponent<PlayerLook>().enabled = true;
+            OpenBackpackTab();
         }
         else if(Input.GetKeyDown(inventoryKey) && !inventory.activeSelf)
         {
@@ -322,19 +331,13 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
                 if(slot.GetComponent<ItemSlot>().item == null)
                 {
                     slot.GetComponent<ItemSlot>().OnItemGained(item);
-                    if (item.GetComponent<Wood>())
-                    {
-                        woodCount++;
-                    }
+                    CountMaterials(item);
                     return;
                 }
                 else if(slot.GetComponent<ItemSlot>().item == item && slot.GetComponent<ItemSlot>().itemCount < item.maxStackCount)
                 {
                     slot.GetComponent<ItemSlot>().OnItemGained(item);
-                    if (item.GetComponent<Wood>())
-                    {
-                        woodCount++;
-                    }
+                    CountMaterials(item);
                     return;
                 }
             }
@@ -342,12 +345,49 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         
     }
 
+    void CountMaterials(Item item)
+    {
+        if (item.GetComponent<Wood>())
+        {
+            woodCount++;
+        }
+        else if (item.GetComponent<Stone>())
+        {
+            stoneCount++;
+        }
+    }
+
     void OpenEquipmentTab()
     {
+        craftingTab.SetActive(false);
         backpackTab.SetActive(false);
         equipmentTab.SetActive(true);
-        CloseTab(backpackTab, backpackTabButton, backpackButtonText);
         OpenTab(equipmentTab, equipmentTabButton, equipmentButtonText);
+        CloseTab(backpackTab, backpackTabButton, backpackButtonText);
+        CloseTab(craftingTab, craftingTabButton, craftingButtonText);
+    }
+
+    void OpenCraftingTab()
+    {
+        craftingTab.SetActive(true);
+        backpackTab.SetActive(false);
+        equipmentTab.SetActive(false);
+        craftingManager.OnOpenCraftingMenu();
+        OpenTab(craftingTab, craftingTabButton, craftingButtonText);
+        CloseTab(backpackTab, backpackTabButton, backpackButtonText);
+        CloseTab(equipmentTab, equipmentTabButton, equipmentButtonText);
+    }
+
+    void OpenBackpackTab()
+    {
+        backpackTab.SetActive(true);
+        equipmentTab.SetActive(false);
+        craftingTab.SetActive(false);
+        ShowBackpackSlots();
+        ShowToolbeltSlots();
+        OpenTab(backpackTab, backpackTabButton, backpackButtonText);
+        CloseTab(equipmentTab, equipmentTabButton, equipmentButtonText);
+        CloseTab(craftingTab, craftingTabButton, craftingButtonText);
     }
 
     void OpenTab(GameObject panel, Button button, TextMeshProUGUI text)
@@ -366,15 +406,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         button.colors = colourBlock;
     }
 
-    void OpenBackpackTab()
-    {
-        backpackTab.SetActive(true);
-        equipmentTab.SetActive(false);
-        ShowBackpackSlots();
-        ShowToolbeltSlots();
-        OpenTab(backpackTab, backpackTabButton, backpackButtonText);
-        CloseTab(equipmentTab, equipmentTabButton, equipmentButtonText);
-    }
+
 
 
     public void OnPointerDown(PointerEventData eventData)

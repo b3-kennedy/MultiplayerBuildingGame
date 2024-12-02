@@ -46,9 +46,7 @@ public class Tree : NetworkBehaviour
     [ClientRpc]
     void GiveWoodToClientRpc(float wood, ClientRpcParams clientRpcParams = default)
     {
-        Debug.Log(NetworkManager.Singleton.LocalClientId);
         GameObject playerObject = PlayerManager.Instance.GetClientPlayer(NetworkManager.Singleton.LocalClientId);
-        Debug.Log(playerObject.name);
         for (int i = 0; i < wood; i++)
         {
             playerObject.GetComponent<InventoryManager>().AddItem(woodItem);
