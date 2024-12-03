@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 6534655705857264738}
   - component: {fileID: 4511684543438079150}
   - component: {fileID: 1342577252302695887}
+  - component: {fileID: -5853904862449473410}
   m_Layer: 0
   m_Name: Hammer 1
   m_TagString: Hammer
@@ -71,7 +72,7 @@ MonoBehaviour:
   isStackable: 0
   icon: {fileID: 2459650779089018946, guid: 54bb500830ce4944faee9999d29317f1, type: 3}
   itemObject: {fileID: 5073748553864748160, guid: 9f644c893a9d52345b539c4e6a1995a6, type: 3}
-  id: 0
+  id: 1
   item: {fileID: 2852300445977663178, guid: 9f644c893a9d52345b539c4e6a1995a6, type: 3}
   holdPos: {x: 0.405, y: -0.378, z: 0.56}
   holdRot: {x: 0, y: 180, z: 90}
@@ -97,6 +98,20 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.5, y: 0.1, z: 0.2}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &-5853904862449473410
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8571250061241964462}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91e463ecb70078245b664f831e70d50d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  itemCount:
+    m_InternalValue: 1
 --- !u!1001 &4100682379978460144
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -18,4 +18,4 @@ MonoBehaviour:
     count: 2
   - item: {fileID: -6924870827047379581, guid: 31b2dce3fef25c1408f890e6877fcbf2, type: 3}
     count: 2
-  craftedItem: {fileID: 4511684543438079150, guid: 6cbab39aed22ed945aa9b52fdce35954, type: 3}
+  craftedItem: {fileID: 8325041984511053821, guid: e287fc6e0cbfd134a99919fd534612c2, type: 3}

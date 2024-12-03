@@ -5228,6 +5228,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 689478213835549622, guid: 3ec02ce1d345866499750c0a50884623, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2672926783261427783, guid: 3ec02ce1d345866499750c0a50884623, type: 3}
       propertyPath: m_Name
       value: Pickaxe

@@ -31,7 +31,18 @@ public class InteractionManager : NetworkBehaviour
             {
                 if (Input.GetKeyDown(KeyCode.E))
                 {
-                    inventoryManager.AddItem(hit.collider.GetComponent<Tool>().item);
+                    if (hit.collider.gameObject.GetComponent<ItemCount>())
+                    {
+                        for (int i = 0; i < hit.collider.gameObject.GetComponent<ItemCount>().itemCount.Value; i++)
+                        {
+                            inventoryManager.AddItem(hit.collider.GetComponent<Tool>().item);
+                        }
+                    }
+                    else
+                    {
+                        inventoryManager.AddItem(hit.collider.GetComponent<Tool>().item);
+                    }
+                    
 
                     DestroyInteractObjServerRpc(hit.collider.gameObject.GetComponent<NetworkObject>().NetworkObjectId);
                 }

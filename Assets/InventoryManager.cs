@@ -7,6 +7,7 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using System;
+using Unity.VisualScripting;
 
 public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler
 {
@@ -37,6 +38,8 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
     public Transform toolBeltInvPos;
     public Transform toolBeltHudPos;
 
+    public Transform dropPoint;
+
     public List<GameObject> visibleBackpackSlots = new List<GameObject>();
     List<GameObject> visibleToolbeltSlots = new List<GameObject>();
 
@@ -50,6 +53,8 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
 
     ItemSlot hoverSlot;
     int currentSelectedIndex = 0;
+
+    Transform currentSelectedToolbeltSlot;
 
     PlayerInterfaceManager playerInterfaceManager;
     BuildingManager buildingManager;
@@ -163,6 +168,16 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         {
             AddItem(ItemHolder.Instance.stone);
         }
+
+        if(Input.GetKeyDown(KeyCode.Q) && currentSelectedToolbeltSlot != null)
+        {
+            if(currentSelectedToolbeltSlot.gameObject.GetComponent<ToolbeltSlot>().activeItem != null)
+            {
+                DropItemServerRpc(currentSelectedToolbeltSlot.gameObject.GetComponent<ToolbeltSlot>().activeItem.GetComponent<Item>().id, 1);
+                currentSelectedToolbeltSlot.GetComponent<ItemSlot>().OnItemRemoved();
+            }
+        }
+
     }
 
     void ToolbeltSlotSelection()
@@ -223,6 +238,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
             {
                 //activate selection graphic
                 slot.transform.GetChild(2).gameObject.SetActive(true);
+                currentSelectedToolbeltSlot = slot.transform;
 
                 //activate item
                 if (slot.GetComponent<ToolbeltSlot>().activeItem != null)
@@ -420,9 +436,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
     }
 
 
-
-
-    public void OnPointerDown(PointerEventData eventData)
+    void Drag(PointerEventData eventData)
     {
         if (eventData.pointerCurrentRaycast.gameObject.GetComponent<ItemIcon>() && dragItem == null)
         {
@@ -446,7 +460,66 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
             dragItem.GetComponent<ItemIcon>().ShowText();
             originalSlot.GetComponent<ItemSlot>().itemCount = 0;
             originalSlot.GetComponent<ItemSlot>().OnItemRemoved();
-            
+
+        }
+    }
+
+    void MoveToToolbelt(PointerEventData eventData, Item item, int count)
+    {
+        foreach (var slot in visibleToolbeltSlots)
+        {
+            if(slot.GetComponent<ToolbeltSlot>().activeItem == null)
+            {
+                if(item.itemObject != null)
+                {
+                    SpawnItemObjectOnServerRpc(item.itemObject.GetComponent<Item>().id, NetworkManager.Singleton.LocalClientId, slot.GetComponent<ItemSlot>().slotIndex);
+                    for (int i = 0; i < count; i++)
+                    {
+                        Debug.Log(item);
+                        slot.GetComponent<ItemSlot>().OnItemGained(item);
+                    }
+                }
+
+                return;
+            }
+        }
+    }
+
+    public void OnPointerDown(PointerEventData eventData)
+    {
+
+        switch (eventData.button)
+        {
+            case PointerEventData.InputButton.Left:
+                Drag(eventData);
+                break;
+            case PointerEventData.InputButton.Right:
+
+                var item = eventData.pointerCurrentRaycast.gameObject.GetComponent<ItemIcon>();
+                
+                if (item != null && !item.isInToolbelt)
+                {
+                    int count = visibleBackpackSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount;
+                    MoveToToolbelt(eventData, item.item, count);
+                    visibleBackpackSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount = 0;
+                    visibleBackpackSlots[item.slotIndex].GetComponent<ItemSlot>().OnItemRemoved();
+                    Destroy(item.gameObject);
+                }
+                else if(item != null && item.isInToolbelt)
+                {
+                    int count = visibleToolbeltSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount;
+                    for (int i = 0;i < count;i++) 
+                    {
+                        AddItem(item.item);
+                    }
+                    visibleToolbeltSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount = 0;
+                    visibleToolbeltSlots[item.slotIndex].GetComponent<ItemSlot>().OnItemRemoved();
+
+                }
+                
+                break;
+
+
         }
 
     }
@@ -456,6 +529,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         if(item.itemObject.TryGetComponent(out Tool toolComponent))
         {
             spawnedTool = Instantiate(item.itemObject, toolHoldSlot);
+            spawnedTool.GetComponent<Rigidbody>().isKinematic = true;
             var oldName = spawnedTool.name;
             spawnedTool.name = "local" + oldName;
             spawnedTool.SetActive(false);
@@ -483,6 +557,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         var itemObj = holder.GetItemObjectFromId(itemId);
 
         GameObject item = Instantiate(itemObj, camHolder.transform);
+        item.GetComponent<Rigidbody>().isKinematic = true;
         var oldName = item.name;
         item.name = "server" + oldName;
         item.GetComponent<NetworkObject>().SpawnWithOwnership(clientId);
@@ -515,8 +590,14 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         
         if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(itemId, out var item))
         {
+            if (item.GetComponent<Tool>())
+            {
+                item.GetComponent<Tool>().enabled = true;
+            }
+            item.gameObject.SetActive(false);
             item.transform.localPosition = item.GetComponent<Tool>().holdPos;
             item.transform.localEulerAngles = item.GetComponent<Tool>().holdRot;
+            item.GetComponent<Rigidbody>().isKinematic = true;
         }
         //if(NetworkManager.Singleton.LocalClientId != clientId)
         //{
@@ -547,58 +628,95 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
     }
 
 
+    [ServerRpc(RequireOwnership = false)]
+    void DropItemServerRpc(int itemId, int itemCount)
+    {
+        GameObject item = ItemHolder.Instance.GetItemObjectFromId(itemId);
+        GameObject spawnedItem = Instantiate(item, dropPoint.transform.position, Quaternion.identity);
+        var count = spawnedItem.GetComponent<ItemCount>();
+        spawnedItem.GetComponent<NetworkObject>().Spawn();
+        count.itemCount.Value = itemCount;
+        EnableComponentsAfterDropClientRpc(spawnedItem.GetComponent<NetworkObject>().NetworkObjectId);
+        Debug.Log(item);
+    }
+
+    [ClientRpc]
+    void EnableComponentsAfterDropClientRpc(ulong itemId)
+    {
+        if(NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(itemId, out var item))
+        {
+            if (item.GetComponent<Collider>())
+            {
+                item.GetComponent<Collider>().enabled = true;
+            }
+        }
+    }
+
     public void OnPointerUp(PointerEventData eventData)
     {
-        if (eventData.pointerCurrentRaycast.gameObject.transform.parent.GetComponent<ItemSlot>() && dragItem != null)
+        if(eventData.button == PointerEventData.InputButton.Left)
         {
-            ItemSlot slot = eventData.pointerCurrentRaycast.gameObject.transform.parent.GetComponent<ItemSlot>();
+            if (eventData.pointerCurrentRaycast.gameObject == null)
+            {
+                DropItemServerRpc(dragItem.GetComponent<ItemIcon>().item.itemObject.GetComponent<Item>().id, dragItem.GetComponent<ItemIcon>().itemCount);
+                Destroy(dragItem);
+            }
+            else if (eventData.pointerCurrentRaycast.gameObject.transform.parent.GetComponent<ItemSlot>() && dragItem != null)
+            {
+                ItemSlot slot = eventData.pointerCurrentRaycast.gameObject.transform.parent.GetComponent<ItemSlot>();
 
-            if(slot.transform.parent == toolBeltParent)
-            {
-                OnItemAddedToToolbelt(dragItem.GetComponent<ItemIcon>().item, slot.slotIndex);
-            }
+                if (slot.transform.parent == toolBeltParent)
+                {
+                    OnItemAddedToToolbelt(dragItem.GetComponent<ItemIcon>().item, slot.slotIndex);
+                }
 
-            bool val = slot.OnItemGained(dragItem.GetComponent<ItemIcon>().item);
-            int addingItemCount = (dragItem.GetComponent<ItemIcon>().itemCount + slot.itemCount)-1;
-            if (val && addingItemCount <= dragItem.GetComponent<ItemIcon>().item.maxStackCount)
-            {
-                for (int i = 0; i < dragItem.GetComponent<ItemIcon>().itemCount-1; i++)
+                bool val = slot.OnItemGained(dragItem.GetComponent<ItemIcon>().item);
+                int addingItemCount = (dragItem.GetComponent<ItemIcon>().itemCount + slot.itemCount) - 1;
+                if (val && addingItemCount <= dragItem.GetComponent<ItemIcon>().item.maxStackCount)
                 {
-                    slot.OnItemGained(dragItem.GetComponent<ItemIcon>().item);
+                    for (int i = 0; i < dragItem.GetComponent<ItemIcon>().itemCount - 1; i++)
+                    {
+                        slot.OnItemGained(dragItem.GetComponent<ItemIcon>().item);
+                    }
                 }
-            }
-            else if(val && addingItemCount > dragItem.GetComponent<ItemIcon>().item.maxStackCount)
-            {
-                int difference = addingItemCount - dragItem.GetComponent<ItemIcon>().item.maxStackCount;
-                for (int i = 0; i < (dragItem.GetComponent<ItemIcon>().itemCount - 1) - difference; i++)
+                else if (val && addingItemCount > dragItem.GetComponent<ItemIcon>().item.maxStackCount)
                 {
-                    slot.OnItemGained(dragItem.GetComponent<ItemIcon>().item);
+                    int difference = addingItemCount - dragItem.GetComponent<ItemIcon>().item.maxStackCount;
+                    for (int i = 0; i < (dragItem.GetComponent<ItemIcon>().itemCount - 1) - difference; i++)
+                    {
+                        slot.OnItemGained(dragItem.GetComponent<ItemIcon>().item);
+                    }
+                    GoToOriginalSlot(difference);
                 }
-                GoToOriginalSlot(difference);
+                else if (!val)
+                {
+                    GoToOriginalSlot(dragItem.GetComponent<ItemIcon>().itemCount);
+                }
+
+                dragItem.GetComponent<ItemIcon>().HideText();
+                Destroy(dragItem);
+
             }
-            else if (!val)
+            else if (eventData.pointerCurrentRaycast.gameObject != null)
             {
                 GoToOriginalSlot(dragItem.GetComponent<ItemIcon>().itemCount);
             }
-
-            dragItem.GetComponent<ItemIcon>().HideText();
-            Destroy(dragItem);
-            
         }
-        else
-        {
-            GoToOriginalSlot(dragItem.GetComponent<ItemIcon>().itemCount);
-        }
+       
     }
 
     void GoToOriginalSlot(int itemCount)
     {
-        for (int i = 0; i < itemCount; i++)
+        if(dragItem != null)
         {
-            originalSlot.GetComponent<ItemSlot>().OnItemGained(dragItem.GetComponent<ItemIcon>().item);
+            for (int i = 0; i < itemCount; i++)
+            {
+                originalSlot.GetComponent<ItemSlot>().OnItemGained(dragItem.GetComponent<ItemIcon>().item);
+            }
+            dragItem.GetComponent<ItemIcon>().HideText();
+            Destroy(dragItem);
         }
-        dragItem.GetComponent<ItemIcon>().HideText();
-        Destroy(dragItem);
+
     }
 
     public void OnSlotHoverEnter(ItemSlot slot)
