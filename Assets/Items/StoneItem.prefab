@@ -49,6 +49,7 @@ MonoBehaviour:
   isStackable: 1
   icon: {fileID: 4398650094986129402, guid: d4fe3cc577e49fa4db48107103532e98, type: 3}
   itemObject: {fileID: 0}
+  id: 0
 --- !u!114 &653606390315034382
 MonoBehaviour:
   m_ObjectHideFlags: 0

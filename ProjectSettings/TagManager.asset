@@ -11,6 +11,8 @@ TagManager:
   - Axe
   - Hammer
   - CameraHolder
+  - Stick
+  - Rock
   layers:
   - Default
   - TransparentFX

@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 public class Item : NetworkBehaviour
 {
-    public int maxStackCount;
+    public int maxStackCount = 1;
     public bool isStackable = false;
     public GameObject icon;
     public GameObject itemObject;

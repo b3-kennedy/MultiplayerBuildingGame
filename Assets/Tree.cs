@@ -8,6 +8,7 @@ public class Tree : NetworkBehaviour
     public NetworkVariable<float> treeHealth = new NetworkVariable<float>();
     float localHealth;
     public Item woodItem;
+    public Item stickItem;
 
     private void Start()
     {
@@ -29,7 +30,15 @@ public class Tree : NetworkBehaviour
     {
         treeHealth.Value -= damage;
 
-        GiveWoodToClientRpc(10, new ClientRpcParams
+        GiveWoodToClientRpc(5, new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new[] { clientId }
+            }
+        });
+
+        GiveSticksToClientRpc(1, new ClientRpcParams
         {
             Send = new ClientRpcSendParams
             {
@@ -51,9 +60,15 @@ public class Tree : NetworkBehaviour
         {
             playerObject.GetComponent<InventoryManager>().AddItem(woodItem);
         }
+    }
 
-
-
-        
+    [ClientRpc]
+    void GiveSticksToClientRpc(float sticks, ClientRpcParams clientRpcParams = default)
+    {
+        GameObject playerObject = PlayerManager.Instance.GetClientPlayer(NetworkManager.Singleton.LocalClientId);
+        for (int i = 0; i < sticks; i++)
+        {
+            playerObject.GetComponent<InventoryManager>().AddItem(stickItem);
+        }
     }
 }

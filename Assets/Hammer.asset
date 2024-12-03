@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemName: Hammer
   itemsRequired:
-  - item: {fileID: 2428889300182285357, guid: 4607f7f7ec67eb94698f4aa966757acf, type: 3}
+  - item: {fileID: -3351865630264249754, guid: 2506171aee4c31644ac89dc957234ead, type: 3}
     count: 2
-  - item: {fileID: 1683197520260404454, guid: 38493a3452b2ef24396e89fc17f66a99, type: 3}
+  - item: {fileID: -6924870827047379581, guid: 31b2dce3fef25c1408f890e6877fcbf2, type: 3}
     count: 2
   craftedItem: {fileID: 4511684543438079150, guid: 6cbab39aed22ed945aa9b52fdce35954, type: 3}

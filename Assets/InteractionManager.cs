@@ -27,22 +27,11 @@ public class InteractionManager : NetworkBehaviour
 
         if(Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out RaycastHit hit, interactRange) && !inventoryManager.inventory.activeSelf)
         {
-            if (hit.collider.CompareTag("Axe"))
-            {
-
-                if (Input.GetKeyDown(KeyCode.E))
-                {
-                    inventoryManager.AddItem(hit.collider.GetComponent<Axe>().item);
-
-                    DestroyInteractObjServerRpc(hit.collider.gameObject.GetComponent<NetworkObject>().NetworkObjectId);
-                }
-
-            }
-            else if (hit.collider.CompareTag("Hammer"))
+            if (hit.collider.GetComponent<Tool>())
             {
                 if (Input.GetKeyDown(KeyCode.E))
                 {
-                    inventoryManager.AddItem(hit.collider.GetComponent<Hammer>().item);
+                    inventoryManager.AddItem(hit.collider.GetComponent<Tool>().item);
 
                     DestroyInteractObjServerRpc(hit.collider.gameObject.GetComponent<NetworkObject>().NetworkObjectId);
                 }

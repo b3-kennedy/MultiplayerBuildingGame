@@ -15,7 +15,7 @@ public class CraftingUIPrefab : MonoBehaviour
 
     [HideInInspector] public CraftingManager craftingManager;
 
-    [HideInInspector] public Item craftableItem;
+    public Item craftableItem;
 
     [HideInInspector] public CraftingRecipe craftingRecipe;
 

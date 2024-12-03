@@ -7,7 +7,6 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using System;
-using static UnityEditor.Progress;
 
 public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler
 {
@@ -222,11 +221,14 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
 
             if (i == selectedIndex)
             {
-                // Activate the 2nd child for the selected slot
+                //activate selection graphic
                 slot.transform.GetChild(2).gameObject.SetActive(true);
-                if(slot.GetComponent<ToolbeltSlot>().activeItem != null)
+
+                //activate item
+                if (slot.GetComponent<ToolbeltSlot>().activeItem != null)
                 {
                     slot.GetComponent<ToolbeltSlot>().activeItem.SetActive(true);
+                    slot.GetComponent<ToolbeltSlot>().activeItem.GetComponent<Collider>().enabled = false;
                     EnableOrDisableToolbeltItemServerRpc(true, slot.GetComponent<ToolbeltSlot>().activeItem.GetComponent<NetworkObject>().NetworkObjectId, NetworkManager.Singleton.LocalClientId, i);
                 }
             }

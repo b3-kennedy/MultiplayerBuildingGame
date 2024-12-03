@@ -124,6 +124,7 @@ MonoBehaviour:
   treeHealth:
     m_InternalValue: 0
   woodItem: {fileID: 2428889300182285357, guid: 4607f7f7ec67eb94698f4aa966757acf, type: 3}
+  stickItem: {fileID: -3351865630264249754, guid: 2506171aee4c31644ac89dc957234ead, type: 3}
 --- !u!114 &7348242759656127890
 MonoBehaviour:
   m_ObjectHideFlags: 0
