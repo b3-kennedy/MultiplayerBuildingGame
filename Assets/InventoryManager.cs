@@ -461,17 +461,15 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
             }
             else
             {
-                if (!interactionManager.isInChest)
+                if (!interactionManager.chestTab.activeSelf)
                 {
                     originalSlot = slotsParent.GetChild(dragItem.GetComponent<ItemIcon>().slotIndex).gameObject;
                     originalSlot.GetComponent<ItemSlot>().item = null;
                 }
                 else
                 {
-                    
                     originalSlot = interactionManager.chest.visibleSlots[dragItem.GetComponent<ItemIcon>().slotIndex];
                     originalSlot.GetComponent<ItemSlot>().item = null;
-
                 }
 
             }
