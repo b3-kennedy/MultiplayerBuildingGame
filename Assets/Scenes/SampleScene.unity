@@ -2290,15 +2290,25 @@ MonoBehaviour:
   wood: {fileID: 2428889300182285357, guid: 4607f7f7ec67eb94698f4aa966757acf, type: 3}
   stone: {fileID: 1683197520260404454, guid: 38493a3452b2ef24396e89fc17f66a99, type: 3}
   objects:
-  - itemObject: {fileID: 7967701695326146870, guid: 81a04cb43121ea0488c40b14e0365026, type: 3}
+  - icon: {fileID: 5095994268162679674, guid: 8b90b7d8b0f38c946abe8090f31a2c97, type: 3}
+    item: {fileID: 5369922150689348198, guid: 99358363d1ade7c4e8c48fc8d67462d3, type: 3}
+    itemObject: {fileID: 7967701695326146870, guid: 81a04cb43121ea0488c40b14e0365026, type: 3}
     id: 0
-  - itemObject: {fileID: 8571250061241964462, guid: 6cbab39aed22ed945aa9b52fdce35954, type: 3}
+  - icon: {fileID: 2459650779089018946, guid: 54bb500830ce4944faee9999d29317f1, type: 3}
+    item: {fileID: 2852300445977663178, guid: 9f644c893a9d52345b539c4e6a1995a6, type: 3}
+    itemObject: {fileID: 8571250061241964462, guid: 6cbab39aed22ed945aa9b52fdce35954, type: 3}
     id: 0
-  - itemObject: {fileID: 225247360499764852, guid: 919d4cda64230a246bba6574a1fa1277, type: 3}
+  - icon: {fileID: 4931044621261046682, guid: 7fc145d623bee8e44999348c04693b1a, type: 3}
+    item: {fileID: -3351865630264249754, guid: 2506171aee4c31644ac89dc957234ead, type: 3}
+    itemObject: {fileID: 225247360499764852, guid: 919d4cda64230a246bba6574a1fa1277, type: 3}
     id: 0
-  - itemObject: {fileID: 919203788123929291, guid: b4b45fb2c951f5c45acae67b6787a6e3, type: 3}
+  - icon: {fileID: 6749041756030124215, guid: 06900ad81e9ff3348b64b01ff602dfa4, type: 3}
+    item: {fileID: -6924870827047379581, guid: 31b2dce3fef25c1408f890e6877fcbf2, type: 3}
+    itemObject: {fileID: 919203788123929291, guid: b4b45fb2c951f5c45acae67b6787a6e3, type: 3}
     id: 0
-  - itemObject: {fileID: 2672926783261427783, guid: 3ec02ce1d345866499750c0a50884623, type: 3}
+  - icon: {fileID: 6794595002881440101, guid: 779641178fdc08944a5798545a208351, type: 3}
+    item: {fileID: 7938706520818068316, guid: 76fc5dbf273baa8459d3d0aee20fbb44, type: 3}
+    itemObject: {fileID: 2672926783261427783, guid: 3ec02ce1d345866499750c0a50884623, type: 3}
     id: 0
 --- !u!4 &1092123443
 Transform:

@@ -505,29 +505,35 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
                 Drag(eventData);
                 break;
             case PointerEventData.InputButton.Right:
+                if (!interactionManager.isInChest)
+                {
+                    var item = eventData.pointerCurrentRaycast.gameObject.GetComponent<ItemIcon>();
 
-                var item = eventData.pointerCurrentRaycast.gameObject.GetComponent<ItemIcon>();
-                
-                if (item != null && !item.isInToolbelt)
-                {
-                    int count = visibleBackpackSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount;
-                    MoveToToolbelt(eventData, item.item, count);
-                    visibleBackpackSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount = 0;
-                    visibleBackpackSlots[item.slotIndex].GetComponent<ItemSlot>().OnItemRemoved();
-                    Destroy(item.gameObject);
-                }
-                else if(item != null && item.isInToolbelt)
-                {
-                    int count = visibleToolbeltSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount;
-                    for (int i = 0;i < count;i++) 
+                    if (item != null && !item.isInToolbelt)
                     {
-                        AddItem(item.item);
+                        int count = visibleBackpackSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount;
+                        MoveToToolbelt(eventData, item.item, count);
+                        visibleBackpackSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount = 0;
+                        visibleBackpackSlots[item.slotIndex].GetComponent<ItemSlot>().OnItemRemoved();
+                        Destroy(item.gameObject);
                     }
-                    visibleToolbeltSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount = 0;
-                    visibleToolbeltSlots[item.slotIndex].GetComponent<ItemSlot>().OnItemRemoved();
+                    else if (item != null && item.isInToolbelt)
+                    {
+                        int count = visibleToolbeltSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount;
+                        for (int i = 0; i < count; i++)
+                        {
+                            AddItem(item.item);
+                        }
+                        visibleToolbeltSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount = 0;
+                        visibleToolbeltSlots[item.slotIndex].GetComponent<ItemSlot>().OnItemRemoved();
 
+                    }
                 }
-                
+                else
+                {
+                    var item = eventData.pointerCurrentRaycast.gameObject.GetComponent<ItemIcon>();
+                    Debug.Log("Added item with id of " + item.item.id + " to the chest");
+                }
                 break;
 
 

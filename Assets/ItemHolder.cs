@@ -7,6 +7,8 @@ using UnityEngine;
 [System.Serializable]
 public class ItemObjectAndId
 {
+    public GameObject icon;
+    public Item item;
     public GameObject itemObject;
     [HideInInspector] public int id;
 }
@@ -40,6 +42,7 @@ public class ItemHolder : MonoBehaviour
     {
         foreach (var item in objects)
         {
+            item.item.id = index;
             item.itemObject.GetComponent<Item>().id = index;
             item.id = index;
             index++;
@@ -68,6 +71,30 @@ public class ItemHolder : MonoBehaviour
             if (item.id == id)
             {
                 return item.itemObject;
+            }
+        }
+        return null;
+    }
+
+    public Item GetItemFromId(int id)
+    {
+        foreach (var item in objects)
+        {
+            if (item.id == id)
+            {
+                return item.item;
+            }
+        }
+        return null;
+    }
+
+    public GameObject GetItemIconFromId(int id)
+    {
+        foreach (var item in objects)
+        {
+            if (item.id == id)
+            {
+                return item.icon;
             }
         }
         return null;
