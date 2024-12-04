@@ -13,6 +13,7 @@ TagManager:
   - CameraHolder
   - Stick
   - Rock
+  - Chest
   layers:
   - Default
   - TransparentFX

@@ -16,10 +16,12 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
     public float stoneCount;
 
     public GameObject inventory;
+    public GameObject chestInterface;
 
     public Button backpackTabButton;
     public Button equipmentTabButton;
     public Button craftingTabButton;
+    public Button chestTabButton;
 
     public GameObject backpackTab;
     public GameObject equipmentTab;
@@ -39,6 +41,8 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
     public Transform toolBeltHudPos;
 
     public Transform dropPoint;
+
+    public Transform activeParent;
 
     public List<GameObject> visibleBackpackSlots = new List<GameObject>();
     List<GameObject> visibleToolbeltSlots = new List<GameObject>();
@@ -60,11 +64,12 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
     BuildingManager buildingManager;
     Transform toolHoldSlot;
     CraftingManager craftingManager;
+    InteractionManager interactionManager;
 
     // Start is called before the first frame update
     void Start()
     {
-
+        interactionManager = GetComponent<InteractionManager>();
         craftingManager = GetComponent<CraftingManager>();
         buildingManager = GetComponent<BuildingManager>();
         playerInterfaceManager = GetComponent<PlayerInterfaceManager>();
@@ -102,28 +107,35 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
             toolHoldSlot = PlayerManager.Instance.GetClientHolder(NetworkManager.Singleton.LocalClientId).transform;
         }
 
-        if (Input.GetKeyDown(inventoryKey) && inventory.activeSelf)
+
+        if (!interactionManager.isInChest)
         {
-            toolBeltParent.SetParent(inventory.transform.parent);
-            toolBeltParent.transform.localPosition = toolBeltHudPos.localPosition;
-            inventory.SetActive(false);
-            Cursor.lockState = CursorLockMode.Locked;
-            GetComponent<PlayerLook>().enabled = true;
-            OpenBackpackTab();
-        }
-        else if(Input.GetKeyDown(inventoryKey) && !inventory.activeSelf)
-        {
-            toolBeltParent.SetParent(backpackTab.transform);
-            toolBeltParent.transform.localPosition = toolBeltInvPos.localPosition;
-            inventory.SetActive(true);
-            currentSelectedIndex = -1;
-            for (int i = 0; i < toolBeltParent.childCount; i++)
+            if (Input.GetKeyDown(inventoryKey) && inventory.activeSelf)
             {
-                toolBeltParent.GetChild(i).GetChild(2).gameObject.SetActive(false);
+                
+                toolBeltParent.SetParent(inventory.transform.parent);
+                toolBeltParent.transform.localPosition = toolBeltHudPos.localPosition;
+                inventory.SetActive(false);
+                Cursor.lockState = CursorLockMode.Locked;
+                GetComponent<PlayerLook>().enabled = true;
+                OpenBackpackTab();
             }
-            Cursor.lockState = CursorLockMode.None;
-            GetComponent<PlayerLook>().enabled = false;
+            else if (Input.GetKeyDown(inventoryKey) && !inventory.activeSelf)
+            {
+                activeParent = inventory.transform;
+                toolBeltParent.SetParent(backpackTab.transform);
+                toolBeltParent.transform.localPosition = toolBeltInvPos.localPosition;
+                inventory.SetActive(true);
+                currentSelectedIndex = -1;
+                for (int i = 0; i < toolBeltParent.childCount; i++)
+                {
+                    toolBeltParent.GetChild(i).GetChild(2).gameObject.SetActive(false);
+                }
+                Cursor.lockState = CursorLockMode.None;
+                GetComponent<PlayerLook>().enabled = false;
+            }
         }
+
 
         if (!inventory.activeSelf)
         {
@@ -407,7 +419,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         CloseTab(equipmentTab, equipmentTabButton, equipmentButtonText);
     }
 
-    void OpenBackpackTab()
+    public void OpenBackpackTab()
     {
         backpackTab.SetActive(true);
         equipmentTab.SetActive(false);
@@ -419,7 +431,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         CloseTab(craftingTab, craftingTabButton, craftingButtonText);
     }
 
-    void OpenTab(GameObject panel, Button button, TextMeshProUGUI text)
+    public void OpenTab(GameObject panel, Button button, TextMeshProUGUI text)
     {
         ColorBlock colourBlock = button.colors;
         colourBlock.normalColor = Color.white;
@@ -427,7 +439,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         button.colors = colourBlock;
     }
 
-    void CloseTab(GameObject panel, Button button, TextMeshProUGUI text)
+    public void CloseTab(GameObject panel, Button button, TextMeshProUGUI text)
     {
         ColorBlock colourBlock = button.colors;
         colourBlock.normalColor = Color.black;
@@ -441,7 +453,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         if (eventData.pointerCurrentRaycast.gameObject.GetComponent<ItemIcon>() && dragItem == null)
         {
             dragItem = eventData.pointerCurrentRaycast.gameObject;
-            dragItem.transform.SetParent(inventory.transform);
+            dragItem.transform.SetParent(activeParent.transform);
             dragItem.GetComponent<Image>().raycastTarget = false;
             if (dragItem.GetComponent<ItemIcon>().isInToolbelt)
             {
@@ -487,7 +499,6 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
 
     public void OnPointerDown(PointerEventData eventData)
     {
-
         switch (eventData.button)
         {
             case PointerEventData.InputButton.Left:
