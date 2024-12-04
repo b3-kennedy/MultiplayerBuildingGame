@@ -7,7 +7,6 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using System;
-using Unity.VisualScripting;
 
 public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler
 {
@@ -53,7 +52,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
     public KeyCode inventoryKey = KeyCode.I;
 
     GameObject dragItem;
-    GameObject originalSlot;
+    [HideInInspector] public GameObject originalSlot;
 
     ItemSlot hoverSlot;
     int currentSelectedIndex = 0;
@@ -462,9 +461,22 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
             }
             else
             {
-                originalSlot = slotsParent.GetChild(dragItem.GetComponent<ItemIcon>().slotIndex).gameObject;
-                originalSlot.GetComponent<ItemSlot>().item = null;
+                if (!interactionManager.isInChest)
+                {
+                    originalSlot = slotsParent.GetChild(dragItem.GetComponent<ItemIcon>().slotIndex).gameObject;
+                    originalSlot.GetComponent<ItemSlot>().item = null;
+                }
+                else
+                {
+                    
+                    originalSlot = interactionManager.chest.visibleSlots[dragItem.GetComponent<ItemIcon>().slotIndex];
+                    originalSlot.GetComponent<ItemSlot>().item = null;
+
+                }
+
             }
+
+            
 
             dragItem.GetComponent<ItemIcon>().itemCount = originalSlot.GetComponent<ItemSlot>().itemCount;
             dragItem.GetComponent<ItemIcon>().maxItemCount = originalSlot.GetComponent<ItemSlot>().itemCount;
@@ -532,11 +544,61 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
                 else
                 {
                     var item = eventData.pointerCurrentRaycast.gameObject.GetComponent<ItemIcon>();
-                    Debug.Log("Added item with id of " + item.item.id + " to the chest");
+
+                    if (!interactionManager.chestTab.activeSelf)
+                    {
+                        if (interactionManager.chest != null)
+                        {
+                            Debug.Log("Added item with id of " + item.item.id + " to " + interactionManager.chest);
+                            for (int i = 0; i < visibleBackpackSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount; i++)
+                            {
+                                interactionManager.chest.AddItem(item.item);
+                            }
+                            visibleBackpackSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount = 0;
+                            visibleBackpackSlots[item.slotIndex].GetComponent<ItemSlot>().OnItemRemoved();
+
+                            
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 0; i < interactionManager.chest.visibleSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount; i++)
+                        {
+                            AddItem(item.item);
+                        }
+                        interactionManager.chest.visibleSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount = 0;
+                        interactionManager.chest.visibleSlots[item.slotIndex].GetComponent<ItemSlot>().OnItemRemoved();
+
+
+                        
+                    }
+
                 }
                 break;
 
 
+        }
+
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void RemoveItemsFromChestServerRpc(int slotIndex, ulong chestId)
+    {
+        if(NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(chestId, out var chestObj))
+        {
+            chestObj.GetComponent<Chest>().serverSlots[slotIndex].hasItem.Value = false;
+        }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void UpdateServerSlotsServerRpc(int index, int itemId, int count, ulong chestId)
+    {
+        Debug.Log(count.ToString() + " items of id " + itemId + " have been saved on the server in slot " + index.ToString());
+        if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(chestId, out var chestObj))
+        {
+            chestObj.GetComponent<Chest>().serverSlots[index].hasItem.Value = true;
+            chestObj.GetComponent<Chest>().serverSlots[index].itemId.Value = itemId;
+            chestObj.GetComponent<Chest>().serverSlots[index].itemCount.Value = count;
         }
 
     }

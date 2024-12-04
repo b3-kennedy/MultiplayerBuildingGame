@@ -139,14 +139,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ab2541f52d44c34db7059a572c14550, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ui: {fileID: 0}
   isOpen:
     m_InternalValue: 0
   slotCount: 20
-  backpackTab: {fileID: 0}
-  chestTab: {fileID: 0}
-  backpackTabButton: {fileID: 0}
-  chestTabButton: {fileID: 0}
-  backpackButtonText: {fileID: 0}
-  chestButtonText: {fileID: 0}
   interactingPlayer: {fileID: 0}
+  visibleSlots: []
+  serverSlots: []
+  serverSlot: {fileID: 6482219572816431086, guid: 6d2112f8ba873744ca269901909a9380, type: 3}

@@ -5030,6 +5030,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Chest
       objectReference: {fileID: 0}
+    - target: {fileID: 4199280732258838218, guid: 207b02004b6daaf4f9cd9c4137c60bb8, type: 3}
+      propertyPath: serverSlots.Array.size
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5946439902797530184, guid: 207b02004b6daaf4f9cd9c4137c60bb8, type: 3}
       propertyPath: GlobalObjectIdHash
       value: 533974688
