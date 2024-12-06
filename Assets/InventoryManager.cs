@@ -14,6 +14,8 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
     public float woodCount;
     public float stoneCount;
 
+    [Header("UI Control")]
+
     public GameObject inventory;
     public GameObject chestInterface;
 
@@ -30,21 +32,26 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
     public TextMeshProUGUI equipmentButtonText;
     public TextMeshProUGUI craftingButtonText;
 
+    [Header("Toolbelt Control")]
+
     public Backpack backpackSlot;
     public Backpack toolbeltSlot;
+    public Backpack weaponSlot;
 
     public Transform toolBeltParent;
     public Transform slotsParent;
+    public Transform weaponSlotsParent;
 
     public Transform toolBeltInvPos;
     public Transform toolBeltHudPos;
 
     public Transform dropPoint;
 
-    public Transform activeParent;
+    [HideInInspector] public Transform activeParent;
 
-    public List<GameObject> visibleBackpackSlots = new List<GameObject>();
+    [HideInInspector] public List<GameObject> visibleBackpackSlots = new List<GameObject>();
     List<GameObject> visibleToolbeltSlots = new List<GameObject>();
+    List<GameObject> visibleWeaponSlots = new List<GameObject>();
 
     GameObject spawnedTool;
 
@@ -58,6 +65,8 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
     int currentSelectedIndex = 0;
 
     Transform currentSelectedToolbeltSlot;
+
+    public Transform activeBelt;
 
     PlayerInterfaceManager playerInterfaceManager;
     BuildingManager buildingManager;
@@ -94,8 +103,19 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
             toolBeltParent.GetChild(i).GetComponent<ItemSlot>().inventoryManager = this;
         }
 
+        for (int i = 0; i < weaponSlotsParent.childCount; i++)
+        {
+            weaponSlotsParent.GetChild(i).GetComponent<ItemSlot>().slotIndex = i;
+            weaponSlotsParent.GetChild(i).GetComponent<ItemSlot>().inventoryManager = this;
+        }
+
         toolBeltParent.SetParent(inventory.transform.parent);
         toolBeltParent.position = toolBeltHudPos.position;
+
+
+        weaponSlotsParent.SetParent(inventory.transform.parent);
+        weaponSlotsParent.position = toolBeltHudPos.position;
+        activeBelt = toolBeltParent;
     }
 
     private void Update()
@@ -106,6 +126,46 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
             toolHoldSlot = PlayerManager.Instance.GetClientHolder(NetworkManager.Singleton.LocalClientId).transform;
         }
 
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            var slot = toolBeltParent.GetChild(currentSelectedIndex).GetComponent<ToolbeltSlot>();
+            if (slot.activeItem.GetComponent<Weapon>())
+            {
+                Debug.Log(slot.activeItem + " has been added to the weapon slots");
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.LeftAlt) && toolBeltParent.gameObject.activeSelf)
+        {
+            toolBeltParent.gameObject.SetActive(false);
+            weaponSlotsParent.gameObject.SetActive(true);
+            for (int i = 0; i < toolBeltParent.childCount; i++)
+            {
+                if(toolBeltParent.GetChild(i).GetComponent<ToolbeltSlot>().activeItem != null)
+                {
+                    toolBeltParent.GetChild(i).GetComponent<ToolbeltSlot>().activeItem.SetActive(false);
+                    EnableOrDisableToolbeltItemServerRpc(false, toolBeltParent.GetChild(i).GetComponent<ToolbeltSlot>().activeItem.GetComponent<NetworkObject>().NetworkObjectId,
+                        NetworkManager.Singleton.LocalClientId, i);
+                }
+            }
+            activeBelt = weaponSlotsParent;
+        }
+        else if (Input.GetKeyDown(KeyCode.LeftAlt) && !toolBeltParent.gameObject.activeSelf)
+        {
+            activeBelt = toolBeltParent;
+            toolBeltParent.gameObject.SetActive(true);
+            weaponSlotsParent.gameObject.SetActive(false);
+            for (int i = 0; i < weaponSlotsParent.childCount; i++)
+            {
+                if (weaponSlotsParent.GetChild(i).GetComponent<ToolbeltSlot>().activeItem != null)
+                {
+                    weaponSlotsParent.GetChild(i).GetComponent<ToolbeltSlot>().activeItem.SetActive(false);
+                    EnableOrDisableToolbeltItemServerRpc(false, weaponSlotsParent.GetChild(i).GetComponent<ToolbeltSlot>().activeItem.GetComponent<NetworkObject>().NetworkObjectId,
+                        NetworkManager.Singleton.LocalClientId, i);
+                }
+            }
+        }
+
 
         if (!interactionManager.isInChest)
         {
@@ -114,6 +174,8 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
                 
                 toolBeltParent.SetParent(inventory.transform.parent);
                 toolBeltParent.transform.localPosition = toolBeltHudPos.localPosition;
+                weaponSlotsParent.SetParent(inventory.transform.parent);
+                weaponSlotsParent.transform.localPosition = toolBeltHudPos.localPosition;
                 inventory.SetActive(false);
                 Cursor.lockState = CursorLockMode.Locked;
                 GetComponent<PlayerLook>().enabled = true;
@@ -122,8 +184,11 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
             else if (Input.GetKeyDown(inventoryKey) && !inventory.activeSelf)
             {
                 activeParent = inventory.transform;
+                activeBelt.gameObject.SetActive(true);
                 toolBeltParent.SetParent(backpackTab.transform);
                 toolBeltParent.transform.localPosition = toolBeltInvPos.localPosition;
+                weaponSlotsParent.SetParent(backpackTab.transform);
+                weaponSlotsParent.transform.localPosition = toolBeltInvPos.localPosition;
                 inventory.SetActive(true);
                 currentSelectedIndex = -1;
                 for (int i = 0; i < toolBeltParent.childCount; i++)
@@ -200,7 +265,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         if (buildingManager.mode == BuildingManager.Mode.NORMAL)
         {
             float scrollInput = Input.GetAxis("Mouse ScrollWheel");
-            int totalSlots = toolBeltParent.childCount;
+            int totalSlots = activeBelt.childCount;
 
             if (scrollInput != 0f)
             {
@@ -215,14 +280,14 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
                         currentSelectedIndex = (currentSelectedIndex + 1) % totalSlots;
                     }
                 }
-                while (!toolBeltParent.GetChild(currentSelectedIndex).gameObject.activeSelf);
+                while (!activeBelt.GetChild(currentSelectedIndex).gameObject.activeSelf);
 
-                SelectToolSlot(toolBeltParent.GetChild(currentSelectedIndex).gameObject, currentSelectedIndex);
+                SelectToolSlot(activeBelt.GetChild(currentSelectedIndex).gameObject, currentSelectedIndex);
             }
 
-            for (int i = 0; i < toolBeltParent.childCount; i++)
+            for (int i = 0; i < activeBelt.childCount; i++)
             {
-                if (toolBeltParent.GetChild(i).gameObject.activeSelf)
+                if (activeBelt.GetChild(i).gameObject.activeSelf)
                 {
                     // Check if any key from 1 to 9 is pressed
                     for (int key = 1; key <= 9; key++)
@@ -233,7 +298,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
 
                             if (i == inputIndex) // Match index with active slot
                             {
-                                SelectToolSlot(toolBeltParent.GetChild(i).gameObject, i);
+                                SelectToolSlot(activeBelt.GetChild(i).gameObject, i);
                                 break;
                             }
                         }
@@ -245,9 +310,9 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
 
     void SelectToolSlot(GameObject selectedSlot, int selectedIndex)
     {
-        for (int i = 0; i < toolBeltParent.childCount; i++)
+        for (int i = 0; i < activeBelt.childCount; i++)
         {
-            GameObject slot = toolBeltParent.GetChild(i).gameObject;
+            GameObject slot = activeBelt.GetChild(i).gameObject;
 
             if (i == selectedIndex)
             {
@@ -345,6 +410,28 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
 
     }
 
+    void ShowWeaponSlots()
+    {
+        visibleWeaponSlots.Clear();
+        if (weaponSlot != null)
+        {
+            for (int i = 0; i < weaponSlot.slotCount; i++)
+            {
+                weaponSlotsParent.GetChild(i).gameObject.SetActive(true);
+                visibleWeaponSlots.Add(weaponSlotsParent.GetChild(i).gameObject);
+
+            }
+        }
+        else
+        {
+            for (int i = 0; i < weaponSlotsParent.childCount; i++)
+            {
+                weaponSlotsParent.GetChild(i).gameObject.SetActive(false);
+
+            }
+        }
+    }
+
     public void RemoveItem(Item item)
     {
         foreach (var slot in visibleBackpackSlots)
@@ -429,6 +516,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         craftingTab.SetActive(false);
         ShowBackpackSlots();
         ShowToolbeltSlots();
+        ShowWeaponSlots();
         OpenTab(backpackTab, backpackTabButton, backpackButtonText);
         CloseTab(equipmentTab, equipmentTabButton, equipmentButtonText);
         CloseTab(craftingTab, craftingTabButton, craftingButtonText);
@@ -460,7 +548,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
             dragItem.GetComponent<Image>().raycastTarget = false;
             if (dragItem.GetComponent<ItemIcon>().isInToolbelt)
             {
-                originalSlot = toolBeltParent.GetChild(dragItem.GetComponent<ItemIcon>().slotIndex).gameObject;
+                originalSlot = activeBelt.GetChild(dragItem.GetComponent<ItemIcon>().slotIndex).gameObject;
                 originalSlot.GetComponent<ItemSlot>().item = null;
             }
             else
@@ -492,23 +580,47 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
 
     void MoveToToolbelt(PointerEventData eventData, Item item, int count)
     {
-        foreach (var slot in visibleToolbeltSlots)
+        if(activeBelt == toolBeltParent)
         {
-            if(slot.GetComponent<ToolbeltSlot>().activeItem == null)
+            foreach (var slot in visibleToolbeltSlots)
             {
-                if(item.itemObject != null)
+                if (slot.GetComponent<ToolbeltSlot>().activeItem == null)
                 {
-                    SpawnItemObjectOnServerRpc(item.itemObject.GetComponent<Item>().id, NetworkManager.Singleton.LocalClientId, slot.GetComponent<ItemSlot>().slotIndex);
-                    for (int i = 0; i < count; i++)
+                    if (item.itemObject != null)
                     {
-                        Debug.Log(item);
-                        slot.GetComponent<ItemSlot>().OnItemGained(item);
+                        SpawnItemObjectOnServerRpc(item.itemObject.GetComponent<Item>().id, NetworkManager.Singleton.LocalClientId, slot.GetComponent<ItemSlot>().slotIndex);
+                        for (int i = 0; i < count; i++)
+                        {
+                            Debug.Log(item);
+                            slot.GetComponent<ItemSlot>().OnItemGained(item);
+                        }
                     }
-                }
 
-                return;
+                    return;
+                }
             }
         }
+        else if(activeBelt == weaponSlotsParent)
+        {
+            foreach (var slot in visibleWeaponSlots)
+            {
+                if (slot.GetComponent<ToolbeltSlot>().activeItem == null)
+                {
+                    if (item.itemObject != null)
+                    {
+                        SpawnItemObjectOnServerRpc(item.itemObject.GetComponent<Item>().id, NetworkManager.Singleton.LocalClientId, slot.GetComponent<ItemSlot>().slotIndex);
+                        for (int i = 0; i < count; i++)
+                        {
+                            Debug.Log(item);
+                            slot.GetComponent<ItemSlot>().OnItemGained(item);
+                        }
+                    }
+
+                    return;
+                }
+            }
+        }
+
     }
 
     public void OnPointerDown(PointerEventData eventData)
@@ -525,21 +637,46 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
 
                     if (item != null && !item.isInToolbelt)
                     {
+
                         int count = visibleBackpackSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount;
-                        MoveToToolbelt(eventData, item.item, count);
-                        visibleBackpackSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount = 0;
-                        visibleBackpackSlots[item.slotIndex].GetComponent<ItemSlot>().OnItemRemoved();
-                        Destroy(item.gameObject);
+                        if(activeBelt == weaponSlotsParent && !item.item.itemObject.GetComponent<Weapon>())
+                        {
+
+                            Debug.Log("Cannot add non weapon object to weapon slots");
+                        }
+                        else
+                        {
+                            MoveToToolbelt(eventData, item.item, count);
+                            visibleBackpackSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount = 0;
+                            visibleBackpackSlots[item.slotIndex].GetComponent<ItemSlot>().OnItemRemoved();
+                            Destroy(item.gameObject);
+                        }
+
                     }
                     else if (item != null && item.isInToolbelt)
                     {
-                        int count = visibleToolbeltSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount;
-                        for (int i = 0; i < count; i++)
+                        Debug.Log("in toolbelt");
+                        if(activeBelt == toolBeltParent)
                         {
-                            AddItem(item.item);
+                            int count = visibleToolbeltSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount;
+                            for (int i = 0; i < count; i++)
+                            {
+                                AddItem(item.item);
+                            }
+                            visibleToolbeltSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount = 0;
+                            visibleToolbeltSlots[item.slotIndex].GetComponent<ItemSlot>().OnItemRemoved();
                         }
-                        visibleToolbeltSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount = 0;
-                        visibleToolbeltSlots[item.slotIndex].GetComponent<ItemSlot>().OnItemRemoved();
+                        else if(activeBelt == weaponSlotsParent)
+                        {
+                            int count = visibleWeaponSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount;
+                            for (int i = 0; i < count; i++)
+                            {
+                                AddItem(item.item);
+                            }
+                            visibleWeaponSlots[item.slotIndex].GetComponent<ItemSlot>().itemCount = 0;
+                            visibleWeaponSlots[item.slotIndex].GetComponent<ItemSlot>().OnItemRemoved();
+                        }
+
 
                     }
                 }
@@ -625,7 +762,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
             {
                 spawnedTool.GetComponent<Collider>().enabled = false;
             }
-            toolBeltParent.GetChild(index).GetComponent<ToolbeltSlot>().activeItem = spawnedTool;
+            activeBelt.GetChild(index).GetComponent<ToolbeltSlot>().activeItem = spawnedTool;
             SpawnItemObjectOnServerRpc(spawnedTool.GetComponent<Item>().id, NetworkManager.Singleton.LocalClientId, index);
 
         }
@@ -670,7 +807,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         {
             if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(itemId, out var tool))
             {
-                toolBeltParent.GetChild(index).GetComponent<ToolbeltSlot>().activeItem = tool.gameObject;
+                activeBelt.GetChild(index).GetComponent<ToolbeltSlot>().activeItem = tool.gameObject;
             }
                 
             Destroy(spawnedTool);
@@ -761,12 +898,14 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
             {
                 ItemSlot slot = eventData.pointerCurrentRaycast.gameObject.transform.parent.GetComponent<ItemSlot>();
 
-                if (slot.transform.parent == toolBeltParent)
+                bool val = slot.OnItemGained(dragItem.GetComponent<ItemIcon>().item);
+
+                if (val && slot.transform.parent == activeBelt)
                 {
                     OnItemAddedToToolbelt(dragItem.GetComponent<ItemIcon>().item, slot.slotIndex);
                 }
 
-                bool val = slot.OnItemGained(dragItem.GetComponent<ItemIcon>().item);
+                
                 int addingItemCount = (dragItem.GetComponent<ItemIcon>().itemCount + slot.itemCount) - 1;
                 if (val && addingItemCount <= dragItem.GetComponent<ItemIcon>().item.maxStackCount)
                 {
