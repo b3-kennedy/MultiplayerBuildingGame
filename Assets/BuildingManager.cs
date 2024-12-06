@@ -23,10 +23,13 @@ public class BuildingManager : NetworkBehaviour
     public float gridSizeY;
     public float gridSizeZ;
 
+    public float chestGridSize;
+
     public GameObject floor;
     public GameObject wall;
     public GameObject ramp;
     public GameObject windowWall;
+    public GameObject chest;
 
     public GameObject buildObject;
     [HideInInspector] public GameObject currentObject;
@@ -54,6 +57,8 @@ public class BuildingManager : NetworkBehaviour
     public BuildObject[] buildObjects;
 
     int buildIndex;
+
+    Vector3 gridPos;
 
 
     // Start is called before the first frame update
@@ -120,12 +125,17 @@ public class BuildingManager : NetworkBehaviour
             buildObject = windowWall;
             buildIndex = 3;
         }
+        else if (Input.GetKeyDown(KeyCode.Alpha5))
+        {
+            Destroy(currentObject);
+            buildObject = chest;
+            buildIndex = 4;
+        }
 
         // Perform raycasting to detect where the object should snap
         if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out RaycastHit hit, 10, layer))
         {
             // Check if we hit a wall or another target for contextual snapping
-            Vector3 gridPos;
             if (hit.collider.CompareTag("Wall"))
             {
                 // Dynamically adjust the Y grid size based on the wall's height
@@ -158,15 +168,27 @@ public class BuildingManager : NetworkBehaviour
                 {
                     gridPos += hit.normal * (buildObject.transform.localScale.x / 2);
                 }
+                else if (buildObject == chest)
+                {
+                    gridPos = new Vector3(Mathf.Round(hit.point.x / (gridSizeX / chestGridSize)) * (gridSizeX / chestGridSize), (Mathf.Round(hit.point.y / gridSizeY) * gridSizeY) + 0.2f, Mathf.Round(hit.point.z / (gridSizeZ / chestGridSize)) * (gridSizeZ / chestGridSize)); ;
+                }
             }
             else
             {
                 // Default snapping logic
-                gridPos = new Vector3(
-                    Mathf.Round(hit.point.x / gridSizeX) * gridSizeX,          // Snap X
-                    Mathf.Round(hit.point.y / gridSizeY) * gridSizeY,          // Snap Y
-                    Mathf.Round(hit.point.z / gridSizeZ) * gridSizeZ           // Snap Z
-                );
+                if (currentObject != null)
+                {
+                    if (!currentObject.GetComponent<Chest>())
+                    {
+                        gridPos = new Vector3(Mathf.Round(hit.point.x / gridSizeX) * gridSizeX, Mathf.Round(hit.point.y / gridSizeY) * gridSizeY, Mathf.Round(hit.point.z / gridSizeZ) * gridSizeZ);
+                    }
+                    else if (currentObject.GetComponent<Chest>())
+                    {
+                        gridPos = new Vector3(Mathf.Round(hit.point.x / (gridSizeX / chestGridSize)) * (gridSizeX / chestGridSize), Mathf.Round(hit.point.y / gridSizeY) * gridSizeY, Mathf.Round(hit.point.z / (gridSizeZ / chestGridSize)) * (gridSizeZ / chestGridSize));
+                    }
+                }
+
+
             }
 
             // Handle the current placeholder object

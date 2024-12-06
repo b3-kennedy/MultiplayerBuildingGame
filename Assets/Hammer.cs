@@ -10,6 +10,7 @@ public class Hammer : Tool
     // Start is called before the first frame update
     void Start()
     {
+        player = PlayerManager.Instance.GetClientPlayer(NetworkManager.LocalClientId);
         if(player != null)
         {
             buildingManager = player.GetComponent<BuildingManager>();

@@ -184,6 +184,10 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         {
             if(currentSelectedToolbeltSlot.gameObject.GetComponent<ToolbeltSlot>().activeItem != null)
             {
+                if(buildingManager.mode == BuildingManager.Mode.BUILD)
+                {
+                    buildingManager.mode = BuildingManager.Mode.NORMAL;
+                }
                 DropItemServerRpc(currentSelectedToolbeltSlot.gameObject.GetComponent<ToolbeltSlot>().activeItem.GetComponent<Item>().id, 1);
                 currentSelectedToolbeltSlot.GetComponent<ItemSlot>().OnItemRemoved();
             }
@@ -591,7 +595,6 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
     [ServerRpc(RequireOwnership = false)]
     public void UpdateServerSlotsServerRpc(int index, int itemId, int count, ulong chestId)
     {
-        Debug.Log(count.ToString() + " items of id " + itemId + " have been saved on the server in slot " + index.ToString());
         if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(chestId, out var chestObj))
         {
             chestObj.GetComponent<Chest>().serverSlots[index].hasItem.Value = true;
@@ -606,7 +609,11 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         if(item.itemObject.TryGetComponent(out Tool toolComponent))
         {
             spawnedTool = Instantiate(item.itemObject, toolHoldSlot);
-            spawnedTool.GetComponent<Rigidbody>().isKinematic = true;
+            if (spawnedTool.GetComponent<Rigidbody>())
+            {
+                spawnedTool.GetComponent<Rigidbody>().isKinematic = true;
+            }
+            
             var oldName = spawnedTool.name;
             spawnedTool.name = "local" + oldName;
             spawnedTool.SetActive(false);
@@ -634,7 +641,11 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         var itemObj = holder.GetItemObjectFromId(itemId);
 
         GameObject item = Instantiate(itemObj, camHolder.transform);
-        item.GetComponent<Rigidbody>().isKinematic = true;
+        if (item.GetComponent<Rigidbody>())
+        {
+            item.GetComponent<Rigidbody>().isKinematic = true;
+        }
+        
         var oldName = item.name;
         item.name = "server" + oldName;
         item.GetComponent<NetworkObject>().SpawnWithOwnership(clientId);
@@ -674,7 +685,11 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
             item.gameObject.SetActive(false);
             item.transform.localPosition = item.GetComponent<Tool>().holdPos;
             item.transform.localEulerAngles = item.GetComponent<Tool>().holdRot;
-            item.GetComponent<Rigidbody>().isKinematic = true;
+            if (item.GetComponent<Rigidbody>())
+            {
+                item.GetComponent<Rigidbody>().isKinematic = true;
+            }
+            
         }
         //if(NetworkManager.Singleton.LocalClientId != clientId)
         //{
@@ -735,6 +750,10 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         {
             if (eventData.pointerCurrentRaycast.gameObject == null)
             {
+                if (buildingManager.mode == BuildingManager.Mode.BUILD)
+                {
+                    buildingManager.mode = BuildingManager.Mode.NORMAL;
+                }
                 DropItemServerRpc(dragItem.GetComponent<ItemIcon>().item.itemObject.GetComponent<Item>().id, dragItem.GetComponent<ItemIcon>().itemCount);
                 Destroy(dragItem);
             }

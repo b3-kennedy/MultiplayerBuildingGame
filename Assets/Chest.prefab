@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 4247052273374571171}
   - component: {fileID: 5946439902797530184}
   - component: {fileID: 4199280732258838218}
+  - component: {fileID: 316317459261807210}
   m_Layer: 0
   m_Name: Chest
   m_TagString: Chest
@@ -146,3 +147,22 @@ MonoBehaviour:
   visibleSlots: []
   serverSlots: []
   serverSlot: {fileID: 6482219572816431086, guid: 6d2112f8ba873744ca269901909a9380, type: 3}
+--- !u!114 &316317459261807210
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2254573045051544281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2fd18b8aec8bfa4981bfbd498687100, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  id: 0
+  objectName: Chest
+  status: 0
+  yOffset: 0.5
+  xOffset: 0
+  zOffset: 0
+  wood: 10

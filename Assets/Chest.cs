@@ -160,14 +160,21 @@ public class Chest : NetworkBehaviour
             index++;
             if (slot.hasItem.Value)
             {
-                
-                for (int i = 0; i < slot.itemCount.Value; i++)
-                {
-                    Debug.Log("adding");
-                    AddItem(ItemHolder.Instance.GetItemFromId(slot.itemId.Value), index-1);
-                }
+
+                StartCoroutine(AddItemCoroutine(index, slot));
                 
             }
         }
+    }
+
+    IEnumerator AddItemCoroutine(int index, ServerSlot slot) 
+    {
+        for (int i = 0; i < slot.itemCount.Value; i++)
+        {
+            AddItem(ItemHolder.Instance.GetItemFromId(slot.itemId.Value), index - 1);
+            yield return new WaitForSeconds(0.01f);
+
+        }
+
     }
 }

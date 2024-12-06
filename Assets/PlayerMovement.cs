@@ -206,7 +206,23 @@ public class PlayerMovement : NetworkBehaviour
 
     public bool IsGrounded()
     {
-        return Physics.Raycast(groundCheck.position, -transform.up, 0.51f);
+        bool rayHit = Physics.Raycast(groundCheck.position, -transform.up, 0.51f);
+
+        return (isOnSlope() || rayHit);
+    }
+
+    public bool isOnSlope()
+    {
+        if(Physics.Raycast(groundCheck.position, -transform.up, out RaycastHit hit ,1f))
+        {
+            if(hit.normal.y != 1)
+            {
+                return true;
+            }
+        }
+        return false;
+        //Debug.Log()
+        //return );
     }
 
     private void FixedUpdate()

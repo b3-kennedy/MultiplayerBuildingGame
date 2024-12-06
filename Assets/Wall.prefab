@@ -128,7 +128,7 @@ MonoBehaviour:
   yOffset: 2
   xOffset: 3.1
   zOffset: 0
-  wood: 10
+  wood: 20
 --- !u!114 &-1456993288929875347
 MonoBehaviour:
   m_ObjectHideFlags: 0
