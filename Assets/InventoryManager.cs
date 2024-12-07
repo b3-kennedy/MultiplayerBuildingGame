@@ -50,7 +50,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
     [HideInInspector] public Transform activeParent;
 
     [HideInInspector] public List<GameObject> visibleBackpackSlots = new List<GameObject>();
-    List<GameObject> visibleToolbeltSlots = new List<GameObject>();
+    [HideInInspector] public List<GameObject> visibleToolbeltSlots = new List<GameObject>();
     List<GameObject> visibleWeaponSlots = new List<GameObject>();
 
     GameObject spawnedTool;

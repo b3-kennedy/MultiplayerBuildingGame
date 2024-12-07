@@ -7,6 +7,7 @@ public class Arrow : MonoBehaviour
 
     Rigidbody rb;
     Vector3 vel;
+    [HideInInspector]public bool fired = false;
 
     // Start is called before the first frame update
     void Start()
@@ -30,6 +31,10 @@ public class Arrow : MonoBehaviour
 
     private void OnCollisionEnter(Collision other)
     {
-        GetComponent<Rigidbody>().isKinematic = true;
+        if (fired)
+        {
+            rb.isKinematic = true;
+        }
+        
     }
 }

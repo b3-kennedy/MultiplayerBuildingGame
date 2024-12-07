@@ -6,6 +6,17 @@ using TMPro;
 using static System.Net.Mime.MediaTypeNames;
 using System.Xml.Linq;
 
+public class DisplayCommand
+{
+    public string target;
+
+    public List<string> targets = new List<string>();
+
+    public DisplayCommand()
+    {
+        targets.Add("items");
+    }
+}
 
 public class GiveCommand 
 {
@@ -167,6 +178,12 @@ public class ConsoleManager : MonoBehaviour
                 ProcessHelpCommand();
 
             }
+            else if (elements[0].ToLower() == "/display")
+            {
+                GameObject commandMessage = CreateMessage(text);
+                messages.Add(commandMessage);
+                ProcessDisplayCommand(elements, text);
+            }
         }
         else
         {
@@ -174,6 +191,29 @@ public class ConsoleManager : MonoBehaviour
             messages.Add(messageObject);
         }
 
+    }
+
+    void ProcessDisplayCommand(string[] elements,string text)
+    {
+        DisplayCommand command = new DisplayCommand();
+
+        if (!command.targets.Contains(elements[1]))
+        {
+            GameObject messageObject = CreateMessage("The target of the command is not valid", Color.red);
+            messages.Add(messageObject);
+            return;
+        }
+        else
+        {
+            ItemHolder itemHolder = ItemHolder.Instance;
+            string items = "Items and Ids:\n";
+            foreach (var item in itemHolder.objects)
+            {
+                items += "    -" + item.item.ToString() + "----id: " + item.id.ToString() + "\n";
+            }
+            GameObject messageObject = CreateMessage(items, Color.green);
+            messages.Add(messageObject);
+        }
     }
 
     bool IsStringAnInteger(string input)
@@ -201,7 +241,7 @@ public class ConsoleManager : MonoBehaviour
         GameObject commandMessage = CreateMessage(text);
         messages.Add(commandMessage);
 
-        if (elements.Length < 4)
+        if (elements.Length < 4 || elements.Length > 4)
         {
             GameObject messageObject = CreateMessage("Part of command is missing the structure of this command is as follows: /give target identifier modifier", Color.red);
             messages.Add(messageObject);
