@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using TMPro;
 using UnityEngine;
@@ -95,6 +96,7 @@ public class CraftingManager : MonoBehaviour
                 {
                     foreach (var craftableItem in recipes)
                     {
+                        
                         if (!craftableItems.Contains(craftableItem.craftedItem))
                         {
                             craftableItems.Add(craftableItem.craftedItem);
@@ -102,7 +104,7 @@ public class CraftingManager : MonoBehaviour
                             CraftingUIPrefab craftUI = craft.GetComponent<CraftingUIPrefab>();
 
                             craftUI.craftableItemIcon.sprite = craftableItem.craftedItem.icon.GetComponent<Image>().sprite;
-                            craftUI.craftableItemName.text = craftableItem.itemName;
+                            craftUI.craftableItemName.text = craftableItem.itemName + " x" + craftableItem.numberOfCraftedItem;
                             craftUI.craftableItem = craftableItem.craftedItem;
                             craftUI.craftingManager = this;
                             craftUI.craftingRecipe = craftableItem;
@@ -110,7 +112,6 @@ public class CraftingManager : MonoBehaviour
 
                             foreach (var matReqItem in craftableItem.itemsRequired)
                             {
-                                Debug.Log(GetItemCount(matReqItem.item));
 
                                 GameObject materialReq = Instantiate(craftUI.materialReqPrefab, craftUI.materialReqParent);
                                 materialReq.transform.GetChild(0).GetComponent<Image>().sprite = matReqItem.item.icon.GetComponent<Image>().sprite;
@@ -148,7 +149,6 @@ public class CraftingManager : MonoBehaviour
         int count = 0;
         foreach (var i in inventoryItems)
         {
-            Debug.Log(i.item);
             if(i.item == item)
             {
                 count = i.count;

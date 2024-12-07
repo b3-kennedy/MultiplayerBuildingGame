@@ -11,6 +11,11 @@ public class Tool : Item
 
     private void Start()
     {
+        if(item != null)
+        {
+            maxStackCount = item.maxStackCount;
+            isStackable = item.isStackable;
+        }
     }
 
     public virtual void Use() { }

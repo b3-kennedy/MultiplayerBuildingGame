@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 37a81dcdbeae9c54988e662f11482d49, type: 3}
-  m_Name: Hammer
+  m_Name: Bow
   m_EditorClassIdentifier: 
-  itemName: Hammer
+  itemName: Bow
   itemsRequired:
   - item: {fileID: -3351865630264249754, guid: 2506171aee4c31644ac89dc957234ead, type: 3}
-    count: 2
-  craftedItem: {fileID: 8325041984511053821, guid: e287fc6e0cbfd134a99919fd534612c2, type: 3}
+    count: 3
+  craftedItem: {fileID: 2416304773385872636, guid: 06a27298931598841af2d899430b619e, type: 3}
   numberOfCraftedItem: 1

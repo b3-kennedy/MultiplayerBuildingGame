@@ -2290,9 +2290,9 @@ MonoBehaviour:
   wood: {fileID: 2428889300182285357, guid: 4607f7f7ec67eb94698f4aa966757acf, type: 3}
   stone: {fileID: 1683197520260404454, guid: 38493a3452b2ef24396e89fc17f66a99, type: 3}
   objects:
-  - icon: {fileID: 5095994268162679674, guid: 8b90b7d8b0f38c946abe8090f31a2c97, type: 3}
-    item: {fileID: 5369922150689348198, guid: 99358363d1ade7c4e8c48fc8d67462d3, type: 3}
-    itemObject: {fileID: 7967701695326146870, guid: 81a04cb43121ea0488c40b14e0365026, type: 3}
+  - icon: {fileID: 6822783855101720445, guid: 4c1819b0bad419b4db21766e2e331817, type: 3}
+    item: {fileID: 1246419461180182592, guid: 88adedf4a80ceb54eab3c668caf262f8, type: 3}
+    itemObject: {fileID: 6122783742734600950, guid: 06a27298931598841af2d899430b619e, type: 3}
     id: 0
   - icon: {fileID: 2459650779089018946, guid: 54bb500830ce4944faee9999d29317f1, type: 3}
     item: {fileID: 2852300445977663178, guid: 9f644c893a9d52345b539c4e6a1995a6, type: 3}
@@ -2306,10 +2306,6 @@ MonoBehaviour:
     item: {fileID: -6924870827047379581, guid: 31b2dce3fef25c1408f890e6877fcbf2, type: 3}
     itemObject: {fileID: 919203788123929291, guid: b4b45fb2c951f5c45acae67b6787a6e3, type: 3}
     id: 0
-  - icon: {fileID: 6794595002881440101, guid: 779641178fdc08944a5798545a208351, type: 3}
-    item: {fileID: 7938706520818068316, guid: 76fc5dbf273baa8459d3d0aee20fbb44, type: 3}
-    itemObject: {fileID: 2672926783261427783, guid: 3ec02ce1d345866499750c0a50884623, type: 3}
-    id: 0
   - icon: {fileID: 4398650094986129402, guid: 5cf29f17bbbfeea4bb908054483cd554, type: 3}
     item: {fileID: 2428889300182285357, guid: 4607f7f7ec67eb94698f4aa966757acf, type: 3}
     itemObject: {fileID: 2672926783261427783, guid: 3ec02ce1d345866499750c0a50884623, type: 3}
@@ -2317,6 +2313,18 @@ MonoBehaviour:
   - icon: {fileID: 4398650094986129402, guid: d4fe3cc577e49fa4db48107103532e98, type: 3}
     item: {fileID: 1683197520260404454, guid: 38493a3452b2ef24396e89fc17f66a99, type: 3}
     itemObject: {fileID: 2672926783261427783, guid: 3ec02ce1d345866499750c0a50884623, type: 3}
+    id: 0
+  - icon: {fileID: 6846124631327274636, guid: 805c55a44c9d95b488edaa9ff21dc2a0, type: 3}
+    item: {fileID: 3743816382864004853, guid: 4f9788bdef86dde419407b163e663a66, type: 3}
+    itemObject: {fileID: 2079357841466614064, guid: 8dfc2a5ef817b394cb8bd2c46c76b1d9, type: 3}
+    id: 0
+  - icon: {fileID: 6794595002881440101, guid: 779641178fdc08944a5798545a208351, type: 3}
+    item: {fileID: 7938706520818068316, guid: 76fc5dbf273baa8459d3d0aee20fbb44, type: 3}
+    itemObject: {fileID: 2672926783261427783, guid: 3ec02ce1d345866499750c0a50884623, type: 3}
+    id: 0
+  - icon: {fileID: 5095994268162679674, guid: 8b90b7d8b0f38c946abe8090f31a2c97, type: 3}
+    item: {fileID: 5369922150689348198, guid: 99358363d1ade7c4e8c48fc8d67462d3, type: 3}
+    itemObject: {fileID: 7967701695326146870, guid: 81a04cb43121ea0488c40b14e0365026, type: 3}
     id: 0
 --- !u!4 &1092123443
 Transform:
@@ -3870,9 +3878,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   recipes:
+  - {fileID: 11400000, guid: 6f6a1490e77140043ae0ab8b9961390e, type: 2}
   - {fileID: 11400000, guid: 49c36613e75d3164bbcbac4ce156e91f, type: 2}
   - {fileID: 11400000, guid: aa13053d2d184ec47a5bf80459f53abd, type: 2}
   - {fileID: 11400000, guid: 71bc1d1c1ab2bec4faabb5f837c97ff0, type: 2}
+  - {fileID: 11400000, guid: 65c9010727e485e439487232e85f3ed0, type: 2}
 --- !u!4 &1681008262
 Transform:
   m_ObjectHideFlags: 0

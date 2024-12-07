@@ -16,4 +16,5 @@ public class CraftingRecipe : ScriptableObject
     public string itemName;
     public List<ItemAndCount> itemsRequired = new List<ItemAndCount>();
     public Item craftedItem;
+    public int numberOfCraftedItem = 1;
 }

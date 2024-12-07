@@ -1,9 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
-public class Weapon : MonoBehaviour
+public class Weapon : NetworkBehaviour
 {
+
+    public Item ammo;
+
     // Start is called before the first frame update
     void Start()
     {

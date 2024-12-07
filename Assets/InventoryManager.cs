@@ -606,6 +606,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
             {
                 if (slot.GetComponent<ToolbeltSlot>().activeItem == null)
                 {
+                    
                     if (item.itemObject != null)
                     {
                         SpawnItemObjectOnServerRpc(item.itemObject.GetComponent<Item>().id, NetworkManager.Singleton.LocalClientId, slot.GetComponent<ItemSlot>().slotIndex);
@@ -614,6 +615,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
                             Debug.Log(item);
                             slot.GetComponent<ItemSlot>().OnItemGained(item);
                         }
+                        slot.GetComponent<ToolbeltSlot>().activeItem.GetComponent<Weapon>().enabled = true;
                     }
 
                     return;
@@ -741,11 +743,17 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
 
     }
 
-    void OnItemAddedToToolbelt(Item item, int index)
+    void OnItemAddedToToolbelt(Item item, int index, bool inWeaponBelt)
     {
         if(item.itemObject.TryGetComponent(out Tool toolComponent))
         {
             spawnedTool = Instantiate(item.itemObject, toolHoldSlot);
+
+            if (inWeaponBelt)
+            {
+                spawnedTool.GetComponent<Weapon>().enabled = true;
+            }
+
             if (spawnedTool.GetComponent<Rigidbody>())
             {
                 spawnedTool.GetComponent<Rigidbody>().isKinematic = true;
@@ -808,6 +816,10 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
             if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(itemId, out var tool))
             {
                 activeBelt.GetChild(index).GetComponent<ToolbeltSlot>().activeItem = tool.gameObject;
+                if(activeBelt == weaponSlotsParent)
+                {
+                    tool.gameObject.GetComponent<Weapon>().enabled = true;
+                }
             }
                 
             Destroy(spawnedTool);
@@ -902,7 +914,15 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
 
                 if (val && slot.transform.parent == activeBelt)
                 {
-                    OnItemAddedToToolbelt(dragItem.GetComponent<ItemIcon>().item, slot.slotIndex);
+                    if(activeBelt == weaponSlotsParent)
+                    {
+                        OnItemAddedToToolbelt(dragItem.GetComponent<ItemIcon>().item, slot.slotIndex, true);
+                    }
+                    else
+                    {
+                        OnItemAddedToToolbelt(dragItem.GetComponent<ItemIcon>().item, slot.slotIndex, false);
+                    }
+                    
                 }
 
                 

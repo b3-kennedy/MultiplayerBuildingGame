@@ -36,7 +36,8 @@ public class CraftingUIPrefab : MonoBehaviour
     {
         if (craftingManager.CanCraftItem(craftableItem))
         {
-            player.GetComponent<InventoryManager>().AddItem(craftableItem);
+
+            
             foreach (var materialReq in craftingRecipe.itemsRequired)
             {
                 for (int i = 0; i < materialReq.count; i++)
@@ -45,6 +46,11 @@ public class CraftingUIPrefab : MonoBehaviour
                 }
             }
             craftingManager.OnOpenCraftingMenu();
+
+            for (int i = 0; i < craftingRecipe.numberOfCraftedItem; i++)
+            {
+                player.GetComponent<InventoryManager>().AddItem(craftableItem);
+            }
 
         }
         else
