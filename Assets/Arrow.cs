@@ -33,7 +33,7 @@ public class Arrow : MonoBehaviour
     {
         if (fired)
         {
-            rb.isKinematic = true;
+            //rb.isKinematic = true;
         }
         
     }

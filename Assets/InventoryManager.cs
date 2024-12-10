@@ -7,6 +7,8 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using System;
+using JetBrains.Annotations;
+using Unity.Netcode.Components;
 
 public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerUpHandler
 {
@@ -615,7 +617,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
                             Debug.Log(item);
                             slot.GetComponent<ItemSlot>().OnItemGained(item);
                         }
-                        slot.GetComponent<ToolbeltSlot>().activeItem.GetComponent<Weapon>().enabled = true;
+                        //slot.GetComponent<ToolbeltSlot>().activeItem.GetComponent<Weapon>().enabled = true;
                     }
 
                     return;
@@ -761,6 +763,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
             
             var oldName = spawnedTool.name;
             spawnedTool.name = "local" + oldName;
+            spawnedTool.GetComponent<MeshRenderer>().enabled = true;
             spawnedTool.SetActive(false);
             spawnedTool.GetComponent<Tool>().player = gameObject;
             spawnedTool.transform.localPosition = toolComponent.holdPos;
@@ -790,7 +793,7 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         {
             item.GetComponent<Rigidbody>().isKinematic = true;
         }
-        
+
         var oldName = item.name;
         item.name = "server" + oldName;
         item.GetComponent<NetworkObject>().SpawnWithOwnership(clientId);
@@ -803,6 +806,22 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
 
         item.transform.SetParent(PlayerManager.Instance.GetClientHolder(clientId).transform);
         item.gameObject.SetActive(false);
+
+
+        if (item.GetComponent<MeshRenderer>())
+        {
+            item.GetComponent<MeshRenderer>().enabled = true;
+        }
+
+        if(item.transform.childCount > 0)
+        {
+            if (item.transform.GetChild(0).GetComponent<MeshRenderer>())
+            {
+                item.transform.GetChild(0).GetComponent<MeshRenderer>().enabled = true;
+            }
+        }
+
+        
         Debug.Log(item.name + " spawned for player " + clientId.ToString());
         
         EnableItemForOtherClientRpc(clientId, item.GetComponent<NetworkObject>().NetworkObjectId, index);
@@ -818,6 +837,10 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
                 activeBelt.GetChild(index).GetComponent<ToolbeltSlot>().activeItem = tool.gameObject;
                 if(activeBelt == weaponSlotsParent)
                 {
+                    if (tool.GetComponent<MeshRenderer>())
+                    {
+                        tool.GetComponent<MeshRenderer>().enabled = true;
+                    }
                     tool.gameObject.GetComponent<Weapon>().enabled = true;
                 }
             }
@@ -827,6 +850,10 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
         
         if (NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(itemId, out var item))
         {
+            if (item.GetComponent<MeshRenderer>())
+            {
+                item.GetComponent<MeshRenderer>().enabled = true;
+            }
             if (item.GetComponent<Tool>())
             {
                 item.GetComponent<Tool>().enabled = true;
@@ -874,6 +901,16 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
     {
         GameObject item = ItemHolder.Instance.GetItemObjectFromId(itemId);
         GameObject spawnedItem = Instantiate(item, dropPoint.transform.position, Quaternion.identity);
+        if (spawnedItem.GetComponent<MeshRenderer>())
+        {
+            spawnedItem.GetComponent<MeshRenderer>().enabled = true;
+        }
+
+        if (spawnedItem.GetComponent<NetworkTransform>())
+        {
+            spawnedItem.GetComponent<NetworkTransform>().enabled = true;
+        }
+        
         var count = spawnedItem.GetComponent<ItemCount>();
         spawnedItem.GetComponent<NetworkObject>().Spawn();
         count.itemCount.Value = itemCount;
@@ -889,6 +926,15 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
             if (item.GetComponent<Collider>())
             {
                 item.GetComponent<Collider>().enabled = true;
+                if (item.GetComponent<MeshRenderer>())
+                {
+                    item.GetComponent<MeshRenderer>().enabled = true;
+                }
+
+                if (item.GetComponent<NetworkTransform>())
+                {
+                    item.GetComponent<NetworkTransform>().enabled = true;
+                }
             }
         }
     }
