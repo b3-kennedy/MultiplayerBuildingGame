@@ -6393,6 +6393,9 @@ MonoBehaviour:
   - /skip
   - /display
   - /clear
+  - /audio
+  - /mute
+  - /unmute
   console: {fileID: 5513429020221606812}
   contentParent: {fileID: 2866531822536214146}
   message: {fileID: 6229848937070754747, guid: 6972f21e6333ae34c84c74fac3ebc533, type: 3}
@@ -6404,6 +6407,7 @@ MonoBehaviour:
   showErrorMessages: 0
   showWarningMessages: 1
   showExceptionMessages: 1
+  showAssertionMessages: 1
 --- !u!1 &7227263948544058255
 GameObject:
   m_ObjectHideFlags: 0

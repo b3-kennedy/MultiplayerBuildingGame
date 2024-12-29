@@ -15,7 +15,20 @@ public class DisplayCommand
     public DisplayCommand()
     {
         targets.Add("items");
+        targets.Add("coords");
     }
+}
+
+public class AudioCommand
+{
+
+    public List<string> targets = new List<string>();
+
+    public AudioCommand()
+    {
+        
+    }
+
 }
 
 public class GiveCommand 
@@ -94,31 +107,31 @@ public class ConsoleManager : NetworkBehaviour
             case LogType.Error:
                 if (!showErrorMessages) return;
                 string errorMessageText = "ERROR: " + text + "\n";
-                CreateMessage(errorMessageText, Color.red);
+                CreateAndDisplayMessage(errorMessageText, Color.red);
                 SendMessageToServerConsole(errorMessageText, 0, NetworkManager.Singleton.LocalClientId);
                 break;
             case LogType.Warning:
                 if (!showWarningMessages) return;
                 string warningMessageText = "WARNING: " + text + "\n";
-                CreateMessage(warningMessageText, Color.yellow);
+                CreateAndDisplayMessage(warningMessageText, Color.yellow);
                 SendMessageToServerConsole(warningMessageText, 2, NetworkManager.Singleton.LocalClientId);
                 break;
             case LogType.Log:
                 if (!showDebugMessages) return;
                 string debugMessageText = "DEBUG: " + text + "\n";
-                CreateMessage(debugMessageText);
+                CreateAndDisplayMessage(debugMessageText);
                 SendMessageToServerConsole(debugMessageText, 3, NetworkManager.Singleton.LocalClientId);
                 break;
             case LogType.Exception:
                 if (!showExceptionMessages) return;
                 string exceptionMessageText = "EXCEPTION: " + text + "\n";
-                CreateMessage(exceptionMessageText, Color.red);
+                CreateAndDisplayMessage(exceptionMessageText, Color.red);
                 SendMessageToServerConsole(exceptionMessageText, 4, NetworkManager.Singleton.LocalClientId);
                 break;
             case LogType.Assert:
                 if (!showAssertionMessages) return;
                 string assertionMessageText = "ASSERTION " + text + "\n";
-                CreateMessage(assertionMessageText, Color.red);
+                CreateAndDisplayMessage(assertionMessageText, Color.red);
                 SendMessageToServerConsole(assertionMessageText, 1, NetworkManager.Singleton.LocalClientId);
                 break;
         }
@@ -139,19 +152,19 @@ public class ConsoleManager : NetworkBehaviour
         switch (type)
         {
             case 0:
-                CreateMessage("[CLIENT " + clientId.ToString() + "] " + text + "\n", Color.red);
+                CreateAndDisplayMessage("[CLIENT " + clientId.ToString() + "] " + text + "\n", Color.red);
                 break;
             case 1:
-                CreateMessage("[CLIENT " + clientId.ToString() + "] " + text + "\n", Color.magenta);
+                CreateAndDisplayMessage("[CLIENT " + clientId.ToString() + "] " + text + "\n", Color.magenta);
                 break;
             case 2:
-                CreateMessage("[CLIENT " + clientId.ToString() + "] " + text + "\n", Color.yellow);
+                CreateAndDisplayMessage("[CLIENT " + clientId.ToString() + "] " + text + "\n", Color.yellow);
                 break;
             case 3:
-                CreateMessage("[CLIENT " + clientId.ToString() + "] " + text + "\n");
+                CreateAndDisplayMessage("[CLIENT " + clientId.ToString() + "] " + text + "\n");
                 break;
             case 4:
-                CreateMessage("[CLIENT " + clientId.ToString() + "] " +text+"\n", Color.red);
+                CreateAndDisplayMessage("[CLIENT " + clientId.ToString() + "] " +text+"\n", Color.red);
                 break;
         }
         
@@ -236,7 +249,7 @@ public class ConsoleManager : NetworkBehaviour
         }
     }
 
-    void CreateMessage(string msg, Color color = default)
+    void CreateAndDisplayMessage(string msg, Color color = default)
     {
         if(color == default)
         {
@@ -257,7 +270,7 @@ public class ConsoleManager : NetworkBehaviour
         {
             if (!validCommands.Contains(elements[0]))
             {
-                CreateMessage("Invalid command", Color.red);
+                CreateAndDisplayMessage("Invalid command", Color.red);
                 return;
             }
 
@@ -267,13 +280,13 @@ public class ConsoleManager : NetworkBehaviour
             }
             else if (elements[0].ToLower() == "/help")
             {
-                CreateMessage(text);
+                CreateAndDisplayMessage(text);
                 ProcessHelpCommand();
 
             }
             else if (elements[0].ToLower() == "/display")
             {
-                CreateMessage(text);
+                CreateAndDisplayMessage(text);
                 ProcessDisplayCommand(elements, text);
             }
             else if (elements[0].ToLower() == "/clear")
@@ -283,24 +296,78 @@ public class ConsoleManager : NetworkBehaviour
                     Destroy(contentParent.GetChild(i).gameObject);
                 }
             }
+            else if (elements[0].ToLower() == "/audio")
+            {
+                CreateAndDisplayMessage(text);
+                ProcessAudioCommand(elements, text);
+            }
+            else if (elements[0].ToLower() == "/mute")
+            {
+                CreateAndDisplayMessage(text);
+                var holder = PlayerManager.Instance.GetClientHolder(NetworkManager.Singleton.LocalClientId);
+                holder.GetComponent<AudioListener>().enabled = false;
+                CreateAndDisplayMessage("Audio has been muted", Color.green);
+            }
+            else if (elements[0].ToLower() == "/unmute")
+            {
+                CreateAndDisplayMessage(text);
+                var holder = PlayerManager.Instance.GetClientHolder(NetworkManager.Singleton.LocalClientId);
+                holder.GetComponent<AudioListener>().enabled = true;
+                CreateAndDisplayMessage("Audio has been unmuted", Color.green);
+            }
         }
         else
         {
-            CreateMessage(text);
+            CreateAndDisplayMessage(text);
         }
 
+    }
+
+    void ProcessAudioCommand(string[] elements, string text)
+    {
+        if(elements.Length < 5)
+        {
+            CreateAndDisplayMessage("Part of command is missing. The structure of this command is as follows: /audio indentifier x y z", Color.red);
+            return;
+        }
+        else if (!IsStringAnInteger(elements[1]) || !IsStringAnInteger(elements[2]) || !IsStringAnInteger(elements[3]) || !IsStringAnInteger(elements[4]))
+        {
+            CreateAndDisplayMessage("Incorrect type. The command is as follows: /audio integer float float float", Color.red);
+            return;
+        }
+        else
+        {
+            int index = int.Parse(elements[1]);
+
+            if(index > AudioManager.Instance.audioClips.Count - 1)
+            {
+                CreateAndDisplayMessage("Audio clip at index " + index.ToString() + " does not exist", Color.red);
+                return;
+            }
+
+            float x = float.Parse(elements[2]);
+            float y = float.Parse(elements[3]);
+            float z = float.Parse(elements[4]);
+
+            AudioManager.Instance.PlayAudioServerRpc(index, x, y, z);
+        }
     }
 
     void ProcessDisplayCommand(string[] elements,string text)
     {
         DisplayCommand command = new DisplayCommand();
 
-        if (!command.targets.Contains(elements[1]))
+        if(elements.Length < 2)
         {
-            CreateMessage("The target of the command is not valid", Color.red);
+            CreateAndDisplayMessage("Structure of command invalid", Color.red);
             return;
         }
-        else
+        else if (!command.targets.Contains(elements[1]))
+        {
+            CreateAndDisplayMessage("The target of the command is not valid", Color.red);
+            return;
+        }
+        else if (elements[1].ToLower() == "items")
         {
             ItemHolder itemHolder = ItemHolder.Instance;
             string items = "Items and Ids:\n";
@@ -308,7 +375,16 @@ public class ConsoleManager : NetworkBehaviour
             {
                 items += "    -" + item.item.ToString() + "----id: " + item.id.ToString() + "\n";
             }
-            CreateMessage(items, Color.green);
+            CreateAndDisplayMessage(items, Color.green);
+        }
+        else if (elements[1].ToLower() == "coords")
+        {
+            GameObject player = PlayerManager.Instance.GetClientPlayer(NetworkManager.Singleton.LocalClientId);
+            string x = "x: " + player.transform.position.x.ToString() + " ";
+            string y = "y: " + player.transform.position.y.ToString() + " ";
+            string z = "z: " + player.transform.position.z.ToString() + " ";
+            string msg = "Current position: " + x + y + z;
+            CreateAndDisplayMessage(msg, Color.green);
         }
     }
 
@@ -327,42 +403,42 @@ public class ConsoleManager : NetworkBehaviour
             message += "    - " + command+"\n";
         }
 
-        CreateMessage(message, Color.green);
+        CreateAndDisplayMessage(message, Color.green);
     }
 
     void ProcessGiveCommand(string[] elements, string text)
     {
         GiveCommand command = new GiveCommand();
-        CreateMessage(text);
+        CreateAndDisplayMessage(text);
 
         if (elements.Length < 4 || elements.Length > 4)
         {
-            CreateMessage("Part of command is missing the structure of this command is as follows: /give target identifier modifier", Color.red);
+            CreateAndDisplayMessage("Part of command is missing. The structure of this command is as follows: /give target identifier modifier", Color.red);
             return;
         }
         else if (!command.targets.Contains(elements[1]))
         {
-            CreateMessage("The target of the command is not valid", Color.red);
+            CreateAndDisplayMessage("The target of the command is not valid", Color.red);
             return;
         }
         else if (!IsStringAnInteger(elements[2]))
         {
-            CreateMessage("Identifier must be an integer", Color.red);
+            CreateAndDisplayMessage("Identifier must be an integer", Color.red);
             return;
         }
         else if (!IsStringAnInteger(elements[3]))
         {
-            CreateMessage("Modifier must be an integer", Color.red);
+            CreateAndDisplayMessage("Modifier must be an integer", Color.red);
             return;
         }
         else if (ItemHolder.Instance.GetItemFromId(int.Parse(elements[2])) == null)
         {
-            CreateMessage("No item with id " + elements[2] + " was found", Color.red);
+            CreateAndDisplayMessage("No item with id " + elements[2] + " was found", Color.red);
             return;
         }
         else
         {
-            CreateMessage(elements[3] + " of item with id of " + elements[2] + " have been added to your inventory", Color.green);
+            CreateAndDisplayMessage(elements[3] + " of item with id of " + elements[2] + " have been added to your inventory", Color.green);
 
 
             int count = int.Parse(elements[3]);
