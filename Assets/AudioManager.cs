@@ -28,15 +28,25 @@ public class AudioManager : NetworkBehaviour
         
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    public void PlayAudioServerRpc(int index, float x, float y, float z)
+    public void PlayAudio(int index, float x, float y, float z)
     {
-        PlayAudioClientRpc(index, x, y, z);
+        AudioSource.PlayClipAtPoint(audioClips[index], new Vector3(x, y, z));
+        PlayAudioServerRpc(index, x, y, z, NetworkManager.Singleton.LocalClientId);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void PlayAudioServerRpc(int index, float x, float y, float z, ulong clientId)
+    {
+        PlayAudioClientRpc(index, x, y, z, clientId);
     }
 
     [ClientRpc]
-    void PlayAudioClientRpc(int index, float x, float y, float z)
+    void PlayAudioClientRpc(int index, float x, float y, float z, ulong clientId)
     {
-        AudioSource.PlayClipAtPoint(audioClips[index], new Vector3(x, y, z));
+        if(NetworkManager.Singleton.LocalClientId != clientId)
+        {
+            AudioSource.PlayClipAtPoint(audioClips[index], new Vector3(x, y, z));
+        }
+        
     }
 }

@@ -304,15 +304,13 @@ public class ConsoleManager : NetworkBehaviour
             else if (elements[0].ToLower() == "/mute")
             {
                 CreateAndDisplayMessage(text);
-                var holder = PlayerManager.Instance.GetClientHolder(NetworkManager.Singleton.LocalClientId);
-                holder.GetComponent<AudioListener>().enabled = false;
+                AudioListener.volume = 0;
                 CreateAndDisplayMessage("Audio has been muted", Color.green);
             }
             else if (elements[0].ToLower() == "/unmute")
             {
                 CreateAndDisplayMessage(text);
-                var holder = PlayerManager.Instance.GetClientHolder(NetworkManager.Singleton.LocalClientId);
-                holder.GetComponent<AudioListener>().enabled = true;
+                AudioListener.volume = 1;
                 CreateAndDisplayMessage("Audio has been unmuted", Color.green);
             }
         }
@@ -349,7 +347,7 @@ public class ConsoleManager : NetworkBehaviour
             float y = float.Parse(elements[3]);
             float z = float.Parse(elements[4]);
 
-            AudioManager.Instance.PlayAudioServerRpc(index, x, y, z);
+            AudioManager.Instance.PlayAudio(index, x, y, z);
         }
     }
 
