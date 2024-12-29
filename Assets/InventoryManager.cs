@@ -763,7 +763,11 @@ public class InventoryManager : NetworkBehaviour, IPointerDownHandler, IPointerU
             
             var oldName = spawnedTool.name;
             spawnedTool.name = "local" + oldName;
-            spawnedTool.GetComponent<MeshRenderer>().enabled = true;
+            if (spawnedTool.GetComponent<MeshRenderer>())
+            {
+                spawnedTool.GetComponent<MeshRenderer>().enabled = true;
+            }
+            
             spawnedTool.SetActive(false);
             spawnedTool.GetComponent<Tool>().player = gameObject;
             spawnedTool.transform.localPosition = toolComponent.holdPos;

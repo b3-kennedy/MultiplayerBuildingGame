@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using static System.Net.Mime.MediaTypeNames;
 using System.Xml.Linq;
+using Unity.Netcode;
 
 public class DisplayCommand
 {
@@ -38,7 +38,7 @@ public class GiveCommand
     }
 }
 
-public class ConsoleManager : MonoBehaviour
+public class ConsoleManager : NetworkBehaviour
 {
 
     public List<string> validCommands = new List<string>();
@@ -58,15 +58,110 @@ public class ConsoleManager : MonoBehaviour
 
     public int index = 0;
 
+    public bool showDebugMessages = true;
+    public bool showErrorMessages = true;
+    public bool showWarningMessages = true;
+    public bool showExceptionMessages = true;
+    public bool showAssertionMessages = true;
+
     // Start is called before the first frame update
     void Start()
     {
         inventoryManager = GetComponent<InventoryManager>();
     }
 
+    private void OnEnable()
+    {
+
+        Application.logMessageReceived += AddConsoleLog;
+
+    }
+
+    private void OnDisable()
+    {
+        Application.logMessageReceived -= AddConsoleLog;
+    }
+
+    void AddConsoleLog(string logString, string stackTrace, LogType type)
+    {
+        string[] logSplit = logString.Split('\n');
+        string[] stackSplit = stackTrace.Split('\n');
+
+        string text =  logSplit[0] + " " + stackSplit[0];
+
+        switch (type)
+        {
+            case LogType.Error:
+                if (!showErrorMessages) return;
+                string errorMessageText = "ERROR: " + text + "\n";
+                CreateMessage(errorMessageText, Color.red);
+                SendMessageToServerConsole(errorMessageText, 0, NetworkManager.Singleton.LocalClientId);
+                break;
+            case LogType.Warning:
+                if (!showWarningMessages) return;
+                string warningMessageText = "WARNING: " + text + "\n";
+                CreateMessage(warningMessageText, Color.yellow);
+                SendMessageToServerConsole(warningMessageText, 2, NetworkManager.Singleton.LocalClientId);
+                break;
+            case LogType.Log:
+                if (!showDebugMessages) return;
+                string debugMessageText = "DEBUG: " + text + "\n";
+                CreateMessage(debugMessageText);
+                SendMessageToServerConsole(debugMessageText, 3, NetworkManager.Singleton.LocalClientId);
+                break;
+            case LogType.Exception:
+                if (!showExceptionMessages) return;
+                string exceptionMessageText = "EXCEPTION: " + text + "\n";
+                CreateMessage(exceptionMessageText, Color.red);
+                SendMessageToServerConsole(exceptionMessageText, 4, NetworkManager.Singleton.LocalClientId);
+                break;
+            case LogType.Assert:
+                if (!showAssertionMessages) return;
+                string assertionMessageText = "ASSERTION " + text + "\n";
+                CreateMessage(assertionMessageText, Color.red);
+                SendMessageToServerConsole(assertionMessageText, 1, NetworkManager.Singleton.LocalClientId);
+                break;
+        }
+    }
+
+    void SendMessageToServerConsole(string text, int type, ulong clientId)
+    {
+        if (!IsServer)
+        {
+            SendMessageToServerRpc(text, type, clientId);
+        }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void SendMessageToServerRpc(string text, int type, ulong clientId)
+    {
+        
+        switch (type)
+        {
+            case 0:
+                CreateMessage("[CLIENT " + clientId.ToString() + "] " + text + "\n", Color.red);
+                break;
+            case 1:
+                CreateMessage("[CLIENT " + clientId.ToString() + "] " + text + "\n", Color.magenta);
+                break;
+            case 2:
+                CreateMessage("[CLIENT " + clientId.ToString() + "] " + text + "\n", Color.yellow);
+                break;
+            case 3:
+                CreateMessage("[CLIENT " + clientId.ToString() + "] " + text + "\n");
+                break;
+            case 4:
+                CreateMessage("[CLIENT " + clientId.ToString() + "] " +text+"\n", Color.red);
+                break;
+        }
+        
+    }
+
     // Update is called once per frame
     void Update()
     {
+
+        if (!IsOwner) return;
 
         if (Input.GetKeyDown(consoleKey) && !console.activeSelf)
         {
@@ -141,7 +236,7 @@ public class ConsoleManager : MonoBehaviour
         }
     }
 
-    GameObject CreateMessage(string msg, Color color = default)
+    void CreateMessage(string msg, Color color = default)
     {
         if(color == default)
         {
@@ -151,7 +246,7 @@ public class ConsoleManager : MonoBehaviour
         GameObject spawnedMsg = Instantiate(message.gameObject, contentParent);
         var msgComponent = spawnedMsg.GetComponent<ConsoleMessage>();
         msgComponent.SetMessage(msg, color);
-        return spawnedMsg;
+        messages.Add(spawnedMsg);
     }
 
     void ProcessCommand(string text)
@@ -162,8 +257,7 @@ public class ConsoleManager : MonoBehaviour
         {
             if (!validCommands.Contains(elements[0]))
             {
-                GameObject messageObject = CreateMessage("Invalid command", Color.red);
-                messages.Add(messageObject);
+                CreateMessage("Invalid command", Color.red);
                 return;
             }
 
@@ -173,22 +267,26 @@ public class ConsoleManager : MonoBehaviour
             }
             else if (elements[0].ToLower() == "/help")
             {
-                GameObject commandMessage = CreateMessage(text);
-                messages.Add(commandMessage);
+                CreateMessage(text);
                 ProcessHelpCommand();
 
             }
             else if (elements[0].ToLower() == "/display")
             {
-                GameObject commandMessage = CreateMessage(text);
-                messages.Add(commandMessage);
+                CreateMessage(text);
                 ProcessDisplayCommand(elements, text);
+            }
+            else if (elements[0].ToLower() == "/clear")
+            {
+                for (int i = 0; i < contentParent.childCount; i++) 
+                {
+                    Destroy(contentParent.GetChild(i).gameObject);
+                }
             }
         }
         else
         {
-            GameObject messageObject = CreateMessage(text);
-            messages.Add(messageObject);
+            CreateMessage(text);
         }
 
     }
@@ -199,8 +297,7 @@ public class ConsoleManager : MonoBehaviour
 
         if (!command.targets.Contains(elements[1]))
         {
-            GameObject messageObject = CreateMessage("The target of the command is not valid", Color.red);
-            messages.Add(messageObject);
+            CreateMessage("The target of the command is not valid", Color.red);
             return;
         }
         else
@@ -211,8 +308,7 @@ public class ConsoleManager : MonoBehaviour
             {
                 items += "    -" + item.item.ToString() + "----id: " + item.id.ToString() + "\n";
             }
-            GameObject messageObject = CreateMessage(items, Color.green);
-            messages.Add(messageObject);
+            CreateMessage(items, Color.green);
         }
     }
 
@@ -231,51 +327,43 @@ public class ConsoleManager : MonoBehaviour
             message += "    - " + command+"\n";
         }
 
-        GameObject messageObject = CreateMessage(message, Color.green);
-        messages.Add(messageObject);
+        CreateMessage(message, Color.green);
     }
 
     void ProcessGiveCommand(string[] elements, string text)
     {
         GiveCommand command = new GiveCommand();
-        GameObject commandMessage = CreateMessage(text);
-        messages.Add(commandMessage);
+        CreateMessage(text);
 
         if (elements.Length < 4 || elements.Length > 4)
         {
-            GameObject messageObject = CreateMessage("Part of command is missing the structure of this command is as follows: /give target identifier modifier", Color.red);
-            messages.Add(messageObject);
+            CreateMessage("Part of command is missing the structure of this command is as follows: /give target identifier modifier", Color.red);
             return;
         }
         else if (!command.targets.Contains(elements[1]))
         {
-            GameObject messageObject = CreateMessage("The target of the command is not valid", Color.red);
-            messages.Add(messageObject);
+            CreateMessage("The target of the command is not valid", Color.red);
             return;
         }
         else if (!IsStringAnInteger(elements[2]))
         {
-            GameObject messageObject = CreateMessage("Identifier must be an integer", Color.red);
-            messages.Add(messageObject);
+            CreateMessage("Identifier must be an integer", Color.red);
             return;
         }
         else if (!IsStringAnInteger(elements[3]))
         {
-            GameObject messageObject = CreateMessage("Modifier must be an integer", Color.red);
-            messages.Add(messageObject);
+            CreateMessage("Modifier must be an integer", Color.red);
             return;
         }
         else if (ItemHolder.Instance.GetItemFromId(int.Parse(elements[2])) == null)
         {
-            GameObject messageObject = CreateMessage("No item with id " + elements[2] + " was found", Color.red);
-            messages.Add(messageObject);
+            CreateMessage("No item with id " + elements[2] + " was found", Color.red);
             return;
         }
         else
         {
-            GameObject messageObject = CreateMessage(elements[3] + " of item with id of " + elements[2] + " have been added to your inventory", Color.green);
+            CreateMessage(elements[3] + " of item with id of " + elements[2] + " have been added to your inventory", Color.green);
 
-            messages.Add(messageObject);
 
             int count = int.Parse(elements[3]);
             int id = int.Parse(elements[2]);
