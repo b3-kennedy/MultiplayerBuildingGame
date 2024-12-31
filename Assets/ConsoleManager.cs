@@ -6,6 +6,8 @@ using TMPro;
 using System.Xml.Linq;
 using Unity.Netcode;
 using System.Linq;
+using ParrelSync;
+using Unity.VisualScripting;
 
 public class DisplayCommand
 {
@@ -19,6 +21,16 @@ public class DisplayCommand
         targets.Add("coords");
         targets.Add("audio");
         targets.Add("players");
+    }
+}
+
+public class SpawnCommand
+{
+    public List<string> targets = new List<string>();
+
+    public SpawnCommand()
+    {
+        targets.Add("zombie");
     }
 }
 
@@ -338,12 +350,53 @@ public class ConsoleManager : NetworkBehaviour
                 ProcessSendCommand(elements, text);
 
             }
+            else if (elements[0].ToLower() == "/spawn")
+            {
+                CreateAndDisplayMessage(text);
+                ProcessSpawnCommand(elements, text);
+            }
         }
         else
         {
             CreateAndDisplayMessage(text);
         }
 
+    }
+
+    void ProcessSpawnCommand(string[] elements, string text)
+    {
+
+        SpawnCommand command = new SpawnCommand();
+
+        if (elements.Length < 3)
+        {
+            CreateAndDisplayMessage("Part of command is missing. The structure of this command is as follows: /spawn type amount", Color.red);
+        }
+        else if (!command.targets.Contains(elements[1].ToLower()))
+        {
+            CreateAndDisplayMessage("Type is invalid", Color.red);
+        }
+        else if (elements[1].ToLower() == "zombie")
+        {
+            if (!IsStringAnInteger(elements[2]))
+            {
+                CreateAndDisplayMessage("Incorrect type. The command is as follows: /spawn string integer");
+            }
+
+            for (int i = 0; i < int.Parse(elements[2]); i++) 
+            {
+                SpawnZombieServerRpc();
+            }
+            CreateAndDisplayMessage("Spawned " + elements[2] + " zombies", Color.green);
+        }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void SpawnZombieServerRpc()
+    {
+        GameObject e = Instantiate(GetComponent<PlayerInterfaceManager>().enemy);
+        e.GetComponent<AIMove>().player = transform;
+        e.GetComponent<NetworkObject>().Spawn();
     }
 
     void ProcessSendCommand(string[] elements, string text)

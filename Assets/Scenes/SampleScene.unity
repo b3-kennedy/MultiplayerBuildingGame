@@ -1508,12 +1508,17 @@ MonoBehaviour:
   cameraHolder: {fileID: 1678722577078559864, guid: cf4169e80b2971b4b9928ecf759cbfab, type: 3}
   client1Player: {fileID: 0}
   client1Holder: {fileID: 0}
+  client1NameCard: {fileID: 0}
   client2Player: {fileID: 0}
   client2Holder: {fileID: 0}
+  client2NameCard: {fileID: 0}
   client3Player: {fileID: 0}
   client3Holder: {fileID: 0}
+  client3NameCard: {fileID: 0}
   client4Player: {fileID: 0}
   client4Holder: {fileID: 0}
+  client4NameCard: {fileID: 0}
+  clientHolders: []
   player1NetId:
     m_InternalValue: 0
   player2NetId:
