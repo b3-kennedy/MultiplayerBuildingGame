@@ -17,11 +17,44 @@ public class PlayerInterfaceManager : NetworkBehaviour
     public Transform serverItemPos;
     public GameObject wall;
     public Transform camPos;
+
+    public GameObject nameCard;
+
     int zombieCount = 0;
 
+    public Transform lookAtPoint;
 
+    public Transform localHolder;
 
+    public override void OnNetworkSpawn()
+    {
 
+        if (IsOwner)
+        {
+            nameCard.SetActive(false);
+            
+        }
+    }
+
+    private void Start()
+    {
+        NetworkManager.Singleton.OnClientConnectedCallback += ClientConnected;
+    }
+
+    void ClientConnected(ulong clientId)
+    {
+
+        
+    }
+
+    private void Update()
+    {
+        if(localHolder != null)
+        {
+            nameCard.transform.LookAt(localHolder);
+        }
+        
+    }
 
     //public override void OnNetworkSpawn()
     //{

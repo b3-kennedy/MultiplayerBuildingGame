@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Xml.Linq;
 using Unity.Netcode;
+using System.Linq;
 
 public class DisplayCommand
 {
@@ -16,6 +17,8 @@ public class DisplayCommand
     {
         targets.Add("items");
         targets.Add("coords");
+        targets.Add("audio");
+        targets.Add("players");
     }
 }
 
@@ -29,6 +32,16 @@ public class AudioCommand
         
     }
 
+}
+
+public class SendCommand
+{
+    public List<string> targets = new List<string>();
+
+    public SendCommand()
+    {
+        targets.Add("msg");
+    }
 }
 
 public class GiveCommand 
@@ -81,6 +94,7 @@ public class ConsoleManager : NetworkBehaviour
     void Start()
     {
         inventoryManager = GetComponent<InventoryManager>();
+        Debug.LogWarning("test warning");
     }
 
     private void OnEnable()
@@ -107,13 +121,13 @@ public class ConsoleManager : NetworkBehaviour
             case LogType.Error:
                 if (!showErrorMessages) return;
                 string errorMessageText = "ERROR: " + text + "\n";
-                CreateAndDisplayMessage(errorMessageText, Color.red);
+                CreateAndDisplayMessage(errorMessageText, CustomColours.Red);
                 SendMessageToServerConsole(errorMessageText, 0, NetworkManager.Singleton.LocalClientId);
                 break;
             case LogType.Warning:
                 if (!showWarningMessages) return;
                 string warningMessageText = "WARNING: " + text + "\n";
-                CreateAndDisplayMessage(warningMessageText, Color.yellow);
+                CreateAndDisplayMessage(warningMessageText, CustomColours.Amber);
                 SendMessageToServerConsole(warningMessageText, 2, NetworkManager.Singleton.LocalClientId);
                 break;
             case LogType.Log:
@@ -125,13 +139,13 @@ public class ConsoleManager : NetworkBehaviour
             case LogType.Exception:
                 if (!showExceptionMessages) return;
                 string exceptionMessageText = "EXCEPTION: " + text + "\n";
-                CreateAndDisplayMessage(exceptionMessageText, Color.red);
+                CreateAndDisplayMessage(exceptionMessageText, CustomColours.Red);
                 SendMessageToServerConsole(exceptionMessageText, 4, NetworkManager.Singleton.LocalClientId);
                 break;
             case LogType.Assert:
                 if (!showAssertionMessages) return;
                 string assertionMessageText = "ASSERTION " + text + "\n";
-                CreateAndDisplayMessage(assertionMessageText, Color.red);
+                CreateAndDisplayMessage(assertionMessageText, CustomColours.Red);
                 SendMessageToServerConsole(assertionMessageText, 1, NetworkManager.Singleton.LocalClientId);
                 break;
         }
@@ -151,20 +165,25 @@ public class ConsoleManager : NetworkBehaviour
         
         switch (type)
         {
+            //error
             case 0:
-                CreateAndDisplayMessage("[CLIENT " + clientId.ToString() + "] " + text + "\n", Color.red);
+                CreateAndDisplayMessage("[CLIENT " + clientId.ToString() + "] " + text + "\n", CustomColours.Red);
                 break;
+            //assertion
             case 1:
-                CreateAndDisplayMessage("[CLIENT " + clientId.ToString() + "] " + text + "\n", Color.magenta);
+                CreateAndDisplayMessage("[CLIENT " + clientId.ToString() + "] " + text + "\n", CustomColours.Magenta);
                 break;
+            //warning
             case 2:
-                CreateAndDisplayMessage("[CLIENT " + clientId.ToString() + "] " + text + "\n", Color.yellow);
+                CreateAndDisplayMessage("[CLIENT " + clientId.ToString() + "] " + text + "\n", CustomColours.Amber);
                 break;
+            //log
             case 3:
                 CreateAndDisplayMessage("[CLIENT " + clientId.ToString() + "] " + text + "\n");
                 break;
+            //exception
             case 4:
-                CreateAndDisplayMessage("[CLIENT " + clientId.ToString() + "] " +text+"\n", Color.red);
+                CreateAndDisplayMessage("[CLIENT " + clientId.ToString() + "] " +text+"\n", CustomColours.Red);
                 break;
         }
         
@@ -249,7 +268,7 @@ public class ConsoleManager : NetworkBehaviour
         }
     }
 
-    void CreateAndDisplayMessage(string msg, Color color = default)
+    public void CreateAndDisplayMessage(string msg, Color color = default)
     {
         if(color == default)
         {
@@ -313,6 +332,12 @@ public class ConsoleManager : NetworkBehaviour
                 AudioListener.volume = 1;
                 CreateAndDisplayMessage("Audio has been unmuted", Color.green);
             }
+            else if (elements[0].ToLower() == "/send")
+            {
+                //CreateAndDisplayMessage(text);
+                ProcessSendCommand(elements, text);
+
+            }
         }
         else
         {
@@ -321,6 +346,131 @@ public class ConsoleManager : NetworkBehaviour
 
     }
 
+    void ProcessSendCommand(string[] elements, string text)
+    {
+        if(elements.Length < 4)
+        {
+            CreateAndDisplayMessage("Part of command is missing. The structure of this command is as follows: /send type clientID subject", Color.red);
+        }
+        else if (elements[1].ToLower() == "msg")
+        {
+            if (!IsStringAnInteger(elements[2]) && elements[2].ToLower() != "all" && !PlayerNames.Instance.playerNames.Contains(elements[2].ToLower()))
+            {
+                CreateAndDisplayMessage("Incorrect clientID. You can use integers or their names to send other players messages. Use /display playes to see both names and ids", Color.red);
+                return;
+            }
+
+            index = 0;
+            string msg = "";
+            foreach (var section in elements)
+            {
+                if (index >= 3)
+                {
+                    msg += section + " ";
+                }
+                index++;
+  
+            }
+
+            SendMessageServerRpc(msg, elements[2], NetworkManager.Singleton.LocalClientId);
+        }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void SendMessageServerRpc(string message, string recipient, ulong senderClientId)
+    {
+        if(recipient.ToLower() == "all")
+        {
+            ReceiveAllMessageClientRpc(message, senderClientId);
+        }
+        else if(IsStringAnInteger(recipient))
+        {
+
+            if (NetworkManager.Singleton.ConnectedClients.ContainsKey((ulong)int.Parse(recipient)))
+            {
+                ReceiveMessageClientRpc(message, senderClientId, (ulong)int.Parse(recipient), true);
+            }
+            else
+            {
+                ReceiveMessageClientRpc(message, senderClientId, (ulong)int.Parse(recipient), false);
+            }
+        }
+        else
+        {
+            if (PlayerNames.Instance.playerNames.Contains(recipient.ToLower()))
+            {
+                int recipientIndex = PlayerNames.Instance.GetIndexFromName(recipient);
+                ReceiveMessageClientRpc(message, senderClientId, (ulong)recipientIndex, true);
+            }
+            else
+            {
+                int recipientIndex = PlayerNames.Instance.GetIndexFromName(recipient);
+                ReceiveMessageClientRpc(message, senderClientId, (ulong)recipientIndex, false);
+            }
+        }
+
+
+    }
+
+
+    [ClientRpc]
+    void ReceiveAllMessageClientRpc(string message, ulong senderClientId)
+    {
+        var receiverConsole = PlayerManager.Instance.GetClientPlayer(NetworkManager.Singleton.LocalClientId).GetComponent<ConsoleManager>();
+
+        //id 99 is impossible, 99 is sent if the user sends a message to themself
+        if (senderClientId == 99)
+        {
+            receiverConsole.CreateAndDisplayMessage(message);
+            return;
+        }
+
+        if(NetworkManager.Singleton.LocalClientId != senderClientId)
+        {
+            receiverConsole.CreateAndDisplayMessage(PlayerManager.Instance.GetClientName(senderClientId) + " (To All): " + message);
+        }
+        else
+        {
+            CreateAndDisplayMessage("You (To All): " + message);
+        }
+        
+    }
+
+    [ClientRpc]
+    void ReceiveMessageClientRpc(string message, ulong senderClientId, ulong receiverClientId, bool doesClientExist)
+    {
+
+        var receiverConsole = PlayerManager.Instance.GetClientPlayer(NetworkManager.Singleton.LocalClientId).GetComponent<ConsoleManager>();
+
+        if (NetworkManager.Singleton.LocalClientId == receiverClientId && NetworkManager.Singleton.LocalClientId == senderClientId)
+        {
+            string newMessage = PlayerManager.Instance.GetClientName(receiverClientId) + " is talking to themself";
+            SendMessageServerRpc(newMessage, "all", 99);
+            return;
+        }
+
+        
+
+        if(NetworkManager.Singleton.LocalClientId == receiverClientId)
+        {
+            receiverConsole.CreateAndDisplayMessage(PlayerManager.Instance.GetClientName(senderClientId) + " (To You): " + message);
+        }
+        else if(NetworkManager.Singleton.LocalClientId == senderClientId)
+        {
+            if (doesClientExist)
+            {
+                CreateAndDisplayMessage("You (To " + PlayerManager.Instance.GetClientName(receiverClientId) + "): " + message);
+            }
+            else
+            {
+                CreateAndDisplayMessage("Player does not exist", Color.red);
+            }
+            
+        }
+        
+    }
+
+
     void ProcessAudioCommand(string[] elements, string text)
     {
         if(elements.Length < 5)
@@ -328,7 +478,7 @@ public class ConsoleManager : NetworkBehaviour
             CreateAndDisplayMessage("Part of command is missing. The structure of this command is as follows: /audio indentifier x y z", Color.red);
             return;
         }
-        else if (!IsStringAnInteger(elements[1]) || !IsStringAnInteger(elements[2]) || !IsStringAnInteger(elements[3]) || !IsStringAnInteger(elements[4]))
+        else if (!IsStringAnInteger(elements[1]) || !isStringAFloat(elements[2]) || !isStringAFloat(elements[3]) || !isStringAFloat(elements[4]))
         {
             CreateAndDisplayMessage("Incorrect type. The command is as follows: /audio integer float float float", Color.red);
             return;
@@ -384,11 +534,38 @@ public class ConsoleManager : NetworkBehaviour
             string msg = "Current position: " + x + y + z;
             CreateAndDisplayMessage(msg, Color.green);
         }
+        else if (elements[1].ToLower() == "audio")
+        {
+            var audioManager = AudioManager.Instance;
+            string audio = "Audio Clips and Ids:\n";
+            foreach (var clip in audioManager.audioClips)
+            {
+                audio += "    -" + clip.audioClip.name + "----id: " + clip.id.ToString() + "\n";
+            }
+            CreateAndDisplayMessage(audio, Color.green);
+        }
+        else if (elements[1].ToLower() == "players")
+        {
+            string players = "Player Ids and Names:\n";
+            foreach (var name in PlayerNames.Instance.playerNames)
+            {
+                if(name != "")
+                {
+                    players += "    -" + name + "----id: " + PlayerNames.Instance.GetIndexFromName(name).ToString() + "\n";
+                }
+            }
+            CreateAndDisplayMessage(players, Color.green);
+        }
     }
 
     bool IsStringAnInteger(string input)
     {
         return int.TryParse(input, out _);
+    }
+
+    bool isStringAFloat(string input)
+    {
+        return float.TryParse(input, out _);
     }
 
     void ProcessHelpCommand()
@@ -450,5 +627,30 @@ public class ConsoleManager : NetworkBehaviour
         }
     }
 
+    public Color ConvertToUnityColor(float r, float g, float b)
+    {
+        float newR = 0;
+        float newG = 0;
+        float newB = 0;
+
+        if(r > 0)
+        {
+            newR = r / 255f;
+        }
+
+        if(g > 0)
+        {
+            newG = g / 255f;
+        }
+
+        if(b > 0)
+        {
+            newB = b / 255f;
+        }
+
+        Debug.Log(newR + " " + newG + " " + newB);
+
+        return new Color(newR, newG, newB, 1);
+    }
 
 }

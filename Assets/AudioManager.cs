@@ -3,13 +3,20 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
+[System.Serializable]
+public class AudioClipAndId
+{
+    public AudioClip audioClip;
+    [HideInInspector] public int id;
+}
+
 public class AudioManager : NetworkBehaviour
 {
 
     public static AudioManager Instance;
 
     
-    public List<AudioClip> audioClips = new List<AudioClip>();
+    public List<AudioClipAndId> audioClips = new List<AudioClipAndId>();
 
     private void Awake()
     {
@@ -19,7 +26,12 @@ public class AudioManager : NetworkBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        int index = 0;
+        foreach (var clip in audioClips)
+        {
+            clip.id = index;
+            index++;
+        }
     }
 
     // Update is called once per frame
@@ -30,7 +42,7 @@ public class AudioManager : NetworkBehaviour
 
     public void PlayAudio(int index, float x, float y, float z)
     {
-        AudioSource.PlayClipAtPoint(audioClips[index], new Vector3(x, y, z));
+        AudioSource.PlayClipAtPoint(audioClips[index].audioClip, new Vector3(x, y, z));
         PlayAudioServerRpc(index, x, y, z, NetworkManager.Singleton.LocalClientId);
     }
 
@@ -45,7 +57,7 @@ public class AudioManager : NetworkBehaviour
     {
         if(NetworkManager.Singleton.LocalClientId != clientId)
         {
-            AudioSource.PlayClipAtPoint(audioClips[index], new Vector3(x, y, z));
+            AudioSource.PlayClipAtPoint(audioClips[index].audioClip, new Vector3(x, y, z));
         }
         
     }

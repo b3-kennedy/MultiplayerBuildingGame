@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
+using TMPro;
 
 public class PlayerManager : NetworkBehaviour
 {
@@ -13,17 +14,21 @@ public class PlayerManager : NetworkBehaviour
 
     public GameObject client1Player;
     public GameObject client1Holder;
+    public GameObject client1NameCard;
 
     public GameObject client2Player;
     public GameObject client2Holder;
+    public GameObject client2NameCard;
 
     public GameObject client3Player;
     public GameObject client3Holder;
+    public GameObject client3NameCard;
 
     public GameObject client4Player;
     public GameObject client4Holder;
+    public GameObject client4NameCard;
 
-    List<GameObject> clientHolders = new List<GameObject>();
+    public List<GameObject> clientHolders = new List<GameObject>();
 
     public NetworkVariable<ulong> player1NetId;
     public NetworkVariable<ulong> player2NetId;
@@ -36,6 +41,8 @@ public class PlayerManager : NetworkBehaviour
     public NetworkVariable<ulong> player4HolderId;
 
     public List<GameObject> localClientToolbeltItems = new List<GameObject>();
+
+    int spawnedPlayers = 0;
 
 
     // Start is called before the first frame update
@@ -71,6 +78,9 @@ public class PlayerManager : NetworkBehaviour
         client1Holder = Instantiate(cameraHolder);
         client1Holder.GetComponent<NetworkObject>().SpawnWithOwnership(clientId);
 
+        var nameCardText = client1Player.GetComponent<PlayerInterfaceManager>().nameCard.transform.GetChild(0).GetChild(0).GetComponent<TextMeshProUGUI>();
+        nameCardText.text = PlayerNames.Instance.playerNames[0];
+
         player1NetId.Value = client1Player.GetComponent<NetworkObject>().NetworkObjectId;
         player1HolderId.Value = client1Holder.GetComponent<NetworkObject>().NetworkObjectId;
 
@@ -93,6 +103,9 @@ public class PlayerManager : NetworkBehaviour
         client2Holder = Instantiate(cameraHolder);
         client2Holder.GetComponent<NetworkObject>().SpawnWithOwnership(clientId);
 
+        var nameCardText = client2Player.GetComponent<PlayerInterfaceManager>().nameCard.transform.GetChild(0).GetChild(0).GetComponent<TextMeshProUGUI>();
+        nameCardText.text = PlayerNames.Instance.playerNames[1];
+
         player2NetId.Value = client2Player.GetComponent<NetworkObject>().NetworkObjectId;
         player2HolderId.Value = client2Holder.GetComponent<NetworkObject>().NetworkObjectId;
 
@@ -106,7 +119,8 @@ public class PlayerManager : NetworkBehaviour
         });
         SpawnPlayerClientRpc(clientId,client2Player.GetComponent<NetworkObject>().NetworkObjectId, client2Holder.GetComponent<NetworkObject>().NetworkObjectId);
 
-        
+
+
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -117,6 +131,9 @@ public class PlayerManager : NetworkBehaviour
         client3Player.GetComponent<NetworkObject>().SpawnWithOwnership(clientId);
         client3Holder = Instantiate(cameraHolder);
         client3Holder.GetComponent<NetworkObject>().SpawnWithOwnership(clientId);
+
+        var nameCardText = client3Player.GetComponent<PlayerInterfaceManager>().nameCard.transform.GetChild(0).GetChild(0).GetComponent<TextMeshProUGUI>();
+        nameCardText.text = PlayerNames.Instance.playerNames[2];
 
         player3NetId.Value = client3Player.GetComponent<NetworkObject>().NetworkObjectId;
         player3HolderId.Value = client3Holder.GetComponent<NetworkObject>().NetworkObjectId;
@@ -132,6 +149,7 @@ public class PlayerManager : NetworkBehaviour
         SpawnPlayerClientRpc(clientId, client3Player.GetComponent<NetworkObject>().NetworkObjectId, client3Holder.GetComponent<NetworkObject>().NetworkObjectId);
 
 
+
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -143,8 +161,13 @@ public class PlayerManager : NetworkBehaviour
         client4Holder = Instantiate(cameraHolder);
         client4Holder.GetComponent<NetworkObject>().SpawnWithOwnership(clientId);
 
+        var nameCardText = client4Player.GetComponent<PlayerInterfaceManager>().nameCard.transform.GetChild(0).GetChild(0).GetComponent<TextMeshProUGUI>();
+        nameCardText.text = PlayerNames.Instance.playerNames[3];
+
         player4NetId.Value = client4Player.GetComponent<NetworkObject>().NetworkObjectId;
         player4HolderId.Value = client4Holder.GetComponent<NetworkObject>().NetworkObjectId;
+
+
 
         EnableCameraComponentsClientRpc(client4Holder.GetComponent<NetworkObject>().NetworkObjectId, 
             client4Player.GetComponent<NetworkObject>().NetworkObjectId ,new ClientRpcParams
@@ -156,6 +179,19 @@ public class PlayerManager : NetworkBehaviour
         });
 
         SpawnPlayerClientRpc(clientId, client4Player.GetComponent<NetworkObject>().NetworkObjectId, client4Holder.GetComponent<NetworkObject>().NetworkObjectId);
+
+
+
+
+    }
+
+    [ClientRpc]
+    void SetupNameplateRotationClientRpc(ulong clientId)
+    {
+        var holder = GetClientHolder(NetworkManager.Singleton.LocalClientId);
+        GetClientPlayer(clientId).GetComponent<PlayerInterfaceManager>().localHolder = holder.transform;
+        GetClientPlayer(clientId).GetComponent<PlayerInterfaceManager>().nameCard.transform.GetChild(0).GetChild(0).GetComponent<TextMeshProUGUI>().text = PlayerNames.Instance.playerNames[clientId];
+
 
 
     }
@@ -174,6 +210,7 @@ public class PlayerManager : NetworkBehaviour
             player.GetComponent<InventoryManager>().inventory.transform.parent.gameObject.SetActive(true);
         }
     }
+
 
     [ClientRpc]
     void EnableEyesClientRpc(ulong player)
@@ -227,6 +264,7 @@ public class PlayerManager : NetworkBehaviour
                 if(clientId != NetworkManager.Singleton.LocalClientId)
                 {
                     player.GetComponent<PlayerInterfaceManager>().eyes.layer = 7;
+                    holder.transform.GetChild(0).gameObject.SetActive(false);
                 }
 
                 player.name = "Player" + (clientId + 1).ToString();
@@ -237,6 +275,7 @@ public class PlayerManager : NetworkBehaviour
                 player.GetComponent<PlayerLook>().player = player.gameObject;
                 player.GetComponent<PlayerLook>().orientation = player.GetComponent<PlayerMovement>().orientation;
                 player.GetComponent<PlayerLook>().Assign();
+
             }
 
         }
@@ -267,7 +306,7 @@ public class PlayerManager : NetworkBehaviour
                     player3Holder.name = "Player3Holder";
                     player3Holder.GetComponent<MoveCamera>().camPos = player3.GetComponent<PlayerInterfaceManager>().camPos;
                     player3.GetComponent<InventoryManager>().enabled = false;
-                    
+
                 }
             }
 
@@ -280,6 +319,7 @@ public class PlayerManager : NetworkBehaviour
                     player4Holder.name = "Player4Holder";
                     player4Holder.GetComponent<MoveCamera>().camPos = player4.GetComponent<PlayerInterfaceManager>().camPos;
                     player4.GetComponent<InventoryManager>().enabled = false;
+
                 }
             }
         }
@@ -403,6 +443,7 @@ public class PlayerManager : NetworkBehaviour
             }
         }
 
+        spawnedPlayers++;
     }
 
     public GameObject GetClientPlayer(ulong id)
@@ -421,6 +462,11 @@ public class PlayerManager : NetworkBehaviour
                 break;
         }
         return null;
+    }
+
+    public string GetClientName(ulong id)
+    {
+        return PlayerNames.Instance.playerNames[id];
     }
 
     public GameObject GetClientHolder(ulong id)
@@ -444,5 +490,17 @@ public class PlayerManager : NetworkBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (IsServer)
+        {
+            if(spawnedPlayers >= NetworkManager.Singleton.ConnectedClients.Count)
+            {
+                foreach (var client in NetworkManager.Singleton.ConnectedClients)
+                {
+                    SetupNameplateRotationClientRpc(client.Key);
+                }
+                spawnedPlayers = 0;
+            }
+        }
+
     }
 }
